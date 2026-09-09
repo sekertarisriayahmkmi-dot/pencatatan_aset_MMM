@@ -1624,16 +1624,16 @@ class AssetDatabase {
   // ─── MUTATIONS CRUD ──────────────────────────────────────────
   getMutations() {
     return this.get(STORAGE_KEYS.MUTATIONS) || [];
-  },
+  }
 
   getMutationById(id) {
     const list = this.getMutations();
     return list.find(m => m.id === id);
-  },
+  }
 
   saveMutations(mutations) {
     this.save(STORAGE_KEYS.MUTATIONS, mutations);
-  },
+  }
 
   addMutation(mutData) {
     const list = this.getMutations();
@@ -1703,14 +1703,14 @@ class AssetDatabase {
     }
 
     return newMut;
-  },
+  }
 
   deleteMutation(id) {
     let list = this.getMutations();
     list = list.filter(m => m.id !== id);
     this.save(STORAGE_KEYS.MUTATIONS, list);
     return true;
-  },
+  }
 
   // ─── Export & Import ────────────────────────────────────────────
   exportDatabaseJSON() {
@@ -1735,7 +1735,7 @@ class AssetDatabase {
       mutations: this.getMutations()
     };
     return JSON.stringify(backup, null, 2);
-  },
+  }
 
   importDatabaseJSON(jsonString) {
     try {
