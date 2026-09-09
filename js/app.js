@@ -4,6 +4,9 @@
  * Live Search Filters, Disposal Animation, and UI Rendering.
  */
 
+// Ensure DB is globally available in this scope
+var db = window.db || (typeof db !== 'undefined' ? db : null);
+
 // Application State
 let currentTab = 'dashboard';
 let currentSelectedRoomId = null;
@@ -8453,14 +8456,41 @@ function previewDivisionLogo(event) {
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    temporaryDivisionLogo = e.target.result;
-    const previewImg = document.getElementById('form-divisi-preview-img');
-    const placeholderIcon = document.getElementById('form-divisi-placeholder-icon');
-    if (previewImg) {
-      previewImg.src = temporaryDivisionLogo;
-      previewImg.classList.remove('hidden');
-    }
-    if (placeholderIcon) placeholderIcon.classList.add('hidden');
+    const rawData = e.target.result;
+    // Auto-compress image to max 400x400 to prevent localStorage quota issues
+    const img = new Image();
+    img.onload = () => {
+      const maxDim = 400;
+      let width = img.width;
+      let height = img.height;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      temporaryDivisionLogo = canvas.toDataURL('image/png', 0.9);
+
+      const previewImg = document.getElementById('form-divisi-preview-img');
+      const placeholderIcon = document.getElementById('form-divisi-placeholder-icon');
+      if (previewImg) {
+        previewImg.src = temporaryDivisionLogo;
+        previewImg.classList.remove('hidden');
+      }
+      if (placeholderIcon) placeholderIcon.classList.add('hidden');
+    };
+    img.onerror = () => {
+      temporaryDivisionLogo = rawData;
+    };
+    img.src = rawData;
   };
   reader.readAsDataURL(file);
 }
@@ -8479,15 +8509,20 @@ function saveDivisionForm(event) {
   }
 
   try {
+    const activeDb = window.db || (typeof db !== 'undefined' ? db : null);
+    if (!activeDb) {
+      throw new Error('Database belum siap dimuat. Silakan muat ulang halaman.');
+    }
+
     if (id) {
-      const existing = db.getDivisionById(id);
+      const existing = activeDb.getDivisionById(id);
       if (existing) {
         existing.name = name;
         existing.parent = parent;
         existing.code = code;
         existing.pj = pj;
         existing.logo = temporaryDivisionLogo || existing.logo;
-        db.updateDivision(existing);
+        activeDb.updateDivision(existing);
         showToast(`Divisi "${name}" berhasil diperbarui!`, 'success');
       }
     } else {
@@ -8499,7 +8534,7 @@ function saveDivisionForm(event) {
         pj: pj || '',
         logo: temporaryDivisionLogo || 'logo-munzalan.png'
       };
-      db.addDivision(newDiv);
+      activeDb.addDivision(newDiv);
       showToast(`Divisi "${name}" berhasil ditambahkan!`, 'success');
     }
 
@@ -8515,11 +8550,13 @@ function saveDivisionForm(event) {
 }
 
 function deleteDivision(id) {
-  const d = db.getDivisionById(id);
+  const activeDb = window.db || (typeof db !== 'undefined' ? db : null);
+  if (!activeDb) return;
+  const d = activeDb.getDivisionById(id);
   if (!d) return;
 
   if (confirm(`Yakin ingin menghapus divisi "${d.name}"?`)) {
-    db.deleteDivision(id);
+    activeDb.deleteDivision(id);
     showToast(`Divisi "${d.name}" berhasil dihapus.`, 'warning');
     if (typeof renderSettingsDivisionsTable === 'function') renderSettingsDivisionsTable();
     if (typeof populateStickerDivisionDropdown === 'function') populateStickerDivisionDropdown();
