@@ -3988,7 +3988,7 @@ function selectRoom(roomId) {
   const statRBEl = document.getElementById('room-stat-rb');
 
   if (roomNameEl) roomNameEl.textContent = room.name;
-  if (roomPjEl) roomPjEl.textContent = `Penanggung Jawab: ${room.pj || '-'} ${room.pjNip ? `(NIP: ${room.pjNip})` : ''} • Lokasi: ${room.floor || 'Gedung Utama'}`;
+  if (roomPjEl) roomPjEl.textContent = `Penanggung Jawab: ${room.pj || '-'} ${room.pjNip ? `(Amanah: ${room.pjNip})` : ''} • Lokasi: ${room.floor || 'Gedung Utama'}`;
   if (statCountEl) statCountEl.textContent = `${totalQty} Unit (${roomAssets.length} Jenis)`;
   if (statNominalEl) statNominalEl.textContent = DepreciationEngine.formatRupiah(totalNominal);
   if (statBEl) statBEl.textContent = `${baikCount} Unit`;
@@ -8621,7 +8621,7 @@ function renderSettingsRoomTable() {
         </td>
         <td class="px-4 py-3 text-xs text-slate-700 dark:text-slate-300">
           <div class="font-semibold">${r.pj || '-'}</div>
-          <div class="text-[10px] text-slate-400">${r.pjNip ? 'NIP: ' + r.pjNip : ''}</div>
+          <div class="text-[10px] text-amber-500/90 font-medium">${r.pjNip ? 'Amanah: ' + r.pjNip : ''}</div>
         </td>
         <td class="px-4 py-3 text-center">
           <div class="flex items-center justify-center gap-1.5">

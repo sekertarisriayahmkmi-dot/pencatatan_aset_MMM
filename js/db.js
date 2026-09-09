@@ -68,21 +68,8 @@ const DEFAULT_SETTINGS = {
   codeSequenceMode: 'category_room' // 'category_room', 'category', 'room', 'global'
 };
 
-// Master 12 Lokasi / Ruangan Resmi Masjid Munzalan Mubarakan
-const DEFAULT_ROOMS = [
-  { id: 'RM-RUT', code: 'RUT', name: 'Ruang Utama', floor: 'Area Sholat Utama, Mihrab, Mimbar', pj: 'Ust. Syahril', pjNip: '19840210 200902 1 002', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
-  { id: 'RM-KNTR', code: 'KNTR', name: 'Kantor Sekretariat', floor: 'Ruang Kerja Pengelola Masjid', pj: 'Drs. H. Bambang Sudrajat', pjNip: '19720415 199803 1 004', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
-  { id: 'RM-KMRP', code: 'KMRP', name: 'Kamar Pengurus', floor: 'Ruang Istirahat Pengurus / Petugas Masjid', pj: 'Rudi Hartono, S.Pd', pjNip: '19840210 200902 1 002', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
-  { id: 'RM-DPR', code: 'DPR', name: 'Dapur', floor: 'Area Memasak & Konsumsi', pj: 'Ibu Siti Aminah', pjNip: '19890512 201201 2 003', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
-  { id: 'RM-PLPR', code: 'PLPR', name: 'Perpustakaan', floor: 'Ruang Khusus Buku & Referensi Keagamaan', pj: 'Dewi Lestari, S.Sos', pjNip: '19881105 201101 2 006', divisionId: 'DIV-002', divisionName: 'Pondok & Pendidikan Santri' },
-  { id: 'RM-GUD', code: 'GUD', name: 'Gudang', floor: 'Tempat Penyimpanan Barang Cadangan / Jarang Dipakai', pj: 'Ahmad Fauzan', pjNip: '19860312 201001 1 005', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
-  { id: 'RM-TOI', code: 'TOI', name: 'Toilet / Kamar Mandi', floor: 'Area Toilet & Tempat Wudhu', pj: 'M. Ridwan', pjNip: '19900101 201501 1 010', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
-  { id: 'RM-PKRN', code: 'PKRN', name: 'Pekarangan / Halaman', floor: 'Area Luar Masjid, Taman, Parkiran', pj: 'Supardi', pjNip: '19820710 200801 1 007', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
-  { id: 'RM-AULA', code: 'AULA', name: 'Aula / Ruang Serbaguna', floor: 'Ruang Pertemuan / Kegiatan', pj: 'Wahyudi, M.Pd', pjNip: '19800714 200501 1 008', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
-  { id: 'RM-POS', code: 'POS', name: 'Pos Jaga', floor: 'Pos Keamanan / Penjagaan', pj: 'Danang Kusuma', pjNip: '19850920 201001 1 009', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
-  { id: 'RM-MNJ', code: 'MNJ', name: 'Masjid Munzalan Mubarakan Jakarta', floor: 'Aset Cabang Lokasi Jakarta', pj: 'Ust. Ilham Pratama', pjNip: '19910425 201601 1 011', divisionId: 'DIV-003', divisionName: 'Cabang & Perwakilan' },
-  { id: 'RM-MTJ', code: 'MTJ', name: 'Masjid Munzalan Mubarakan Tujuh', floor: 'Aset Cabang Lokasi Cabang ke-7', pj: 'Ust. Faturrahman', pjNip: '19930811 201801 1 012', divisionId: 'DIV-003', divisionName: 'Cabang & Perwakilan' }
-];
+// Master Lokasi / Ruangan Resmi (Mulai dari kosongan untuk input data mandiri)
+const DEFAULT_ROOMS = [];
 
 // Master 11 Kategori Resmi Standar Munzalan
 const DEFAULT_CATEGORIES = [
@@ -753,9 +740,8 @@ class AssetDatabase {
       }
     }
 
-    // Auto-migrate / sync standard 12 rooms
-    const existingRooms = this.get(STORAGE_KEYS.ROOMS);
-    if (!existingRooms || existingRooms.length < 6 || !existingRooms.some(r => r.code === 'RUT')) {
+    // Ruangan master dimulai dari data tersimpan atau array kosong
+    if (!localStorage.getItem(STORAGE_KEYS.ROOMS)) {
       this.save(STORAGE_KEYS.ROOMS, DEFAULT_ROOMS);
     }
 
