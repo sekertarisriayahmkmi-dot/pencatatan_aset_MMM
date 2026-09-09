@@ -349,6 +349,8 @@ const DEFAULT_BAST = [
     status: 'Aktif',
     notes: 'Penyerahan aset operasional pembuatan konten video & siaran dakwah daerah.'
   }
+];
+
 // Initial Sample Berita Acara Kerusakan / Pemeriksaan Fisik Barang Rusak
 const DEFAULT_DAMAGE_REPORTS = [
   {
