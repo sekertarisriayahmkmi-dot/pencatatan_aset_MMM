@@ -2961,7 +2961,7 @@
             <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
               <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-semibold text-xs uppercase border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th class="px-4 py-3.5 w-20 text-center">Logo</th>
+                  <th class="px-4 py-3.5 w-24 text-center">Logo / Stiker</th>
                   <th class="px-4 py-3.5">Nama Divisi / Unit</th>
                   <th class="px-4 py-3.5">Induk / Yayasan</th>
                   <th class="px-4 py-3.5">Kode Prefix</th>
@@ -4974,7 +4974,7 @@
           </span>
           <div>
             <h3 id="modal-divisi-title" class="font-bold font-heading text-slate-900 dark:text-slate-100 text-base">Tambah Divisi / Unit Baru</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Atur profil, kode prefix, dan upload stiker divisi</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Atur profil, kode prefix, dan upload logo / stiker divisi</p>
           </div>
         </div>
         <button onclick="closeModal('modal-tambah-divisi')" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
@@ -5008,15 +5008,15 @@
 
         <!-- Upload Logo / Stiker Divisi Section -->
         <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
-          <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">Stiker Divisi:</label>
+          <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">Logo / Stiker Divisi:</label>
           <div class="flex items-center gap-4">
             <div class="w-16 h-16 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden p-1">
-              <img id="form-divisi-preview-img" src="" class="max-w-full max-h-full object-contain hidden" alt="Stiker Divisi">
+              <img id="form-divisi-preview-img" src="" class="max-w-full max-h-full object-contain hidden" alt="Logo / Stiker Divisi">
               <i id="form-divisi-placeholder-icon" data-lucide="image" class="w-7 h-7 text-slate-300"></i>
             </div>
             <div class="space-y-1">
               <input type="file" id="form-divisi-logo-input" accept="image/*" onchange="previewDivisionLogo(event)" class="text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer">
-              <p class="text-[10px] text-slate-400">File PNG transparan / JPG (Akan dipakai di stiker divisi ini)</p>
+              <p class="text-[10px] text-slate-400">File PNG transparan / JPG (Akan dipakai pada label stiker QR &amp; kop dokumen divisi ini)</p>
             </div>
           </div>
         </div>
@@ -5685,17 +5685,17 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- APPLICATION SCRIPTS -->
-  <script src="js/master-barang.js?v=2.7.4"></script>
-  <script src="js/db.js?v=2.7.4"></script>
-  <script src="js/depreciation.js?v=2.7.4"></script>
-  <script src="js/qr-engine.js?v=2.7.4"></script>
-  <script src="js/reports.js?v=2.7.4"></script>
+  <script src="js/master-barang.js?v=2.7.5"></script>
+  <script src="js/db.js?v=2.7.5"></script>
+  <script src="js/depreciation.js?v=2.7.5"></script>
+  <script src="js/qr-engine.js?v=2.7.5"></script>
+  <script src="js/reports.js?v=2.7.5"></script>
   <!-- Supabase Cloud Engine -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js?v=2.7.4"></script>
+  <script src="js/supabase-client.js?v=2.7.5"></script>
   <!-- Auth Engine: Must be AFTER db.js and BEFORE app.js -->
-  <script src="js/auth.js?v=2.7.4"></script>
-  <script src="js/app.js?v=2.7.4"></script>
+  <script src="js/auth.js?v=2.7.5"></script>
+  <script src="js/app.js?v=2.7.5"></script>
   
   <script>
     // Initialize Lucide Icons on initial load & trigger background spreadsheet sync
