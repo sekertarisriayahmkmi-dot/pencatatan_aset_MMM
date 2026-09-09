@@ -1712,25 +1712,26 @@ function autoDetectCategoryFromText(text) {
   if (!catSelect) return;
 
   let detectedCatCode = '';
-  if (/ac|air conditioning|komputer|laptop|proyektor|tv|televisi|sound|audio|kamera|camera|printer|scanner|kulkas|dispenser|radio|kipas|monitor|ups|mixer|amplifier|microphone|speaker|stabilisator|cpu|hard disk|keyboard|modem|server|inverter|lcd/i.test(cleanVal)) {
+  // 1. Elektronik (ELE) - Termasuk Handphone, Smartphone, Telepon Mobile, Gadget, Komputer, Audio, dll.
+  if (/\b(telepon|telephone|phone|handphone|smartphone|ponsel|hp|gadget|tablet|ipad|iphone|android|ht|handy talky|walkie talkie|ac|air conditioning|komputer|laptop|pc|proyektor|tv|televisi|sound|audio|kamera|camera|printer|scanner|kulkas|dispenser|radio|kipas|monitor|ups|mixer|amplifier|microphone|speaker|stabilisator|cpu|hard disk|keyboard|modem|server|inverter|lcd)\b/i.test(cleanVal)) {
     detectedCatCode = 'ELE';
-  } else if (/meja|kursi|lemari|rak|mimbar|podium|karpet|sofa|kasur|filing|buffet|bangku|rehal|sice|spring bed|dipan/i.test(cleanVal)) {
+  } else if (/\b(meja|kursi|lemari|rak|mimbar|podium|karpet|sofa|kasur|filing|buffet|bangku|rehal|sice|spring bed|dipan)\b/i.test(cleanVal)) {
     detectedCatCode = 'PRB';
-  } else if (/vacuum|sapu|pel|pembersih|cuci|lap /i.test(cleanVal)) {
+  } else if (/\b(vacuum|sapu|pel|pembersih|cuci|lap)\b/i.test(cleanVal)) {
     detectedCatCode = 'ALB';
-  } else if (/kompor|panci|piring|gelas|dapur|rice cooker|oven|blender|microwave|tabung gas|kitchen|sendok|garpu|teko/i.test(cleanVal)) {
+  } else if (/\b(kompor|panci|piring|gelas|dapur|rice cooker|oven|blender|microwave|tabung gas|kitchen|sendok|garpu|teko)\b/i.test(cleanVal)) {
     detectedCatCode = 'PER';
-  } else if (/mobil|motor|sepeda|ambulance|bus|truck|pick up|gerobak|tandu/i.test(cleanVal)) {
+  } else if (/\b(mobil|motor|sepeda|ambulance|ambulans|bus|bis|truk|truck|pick up|pickup|gerobak|tandu)\b/i.test(cleanVal) && !/\b(mobile|phone|telephone|handphone|smartphone)\b/i.test(cleanVal)) {
     detectedCatCode = 'KND';
-  } else if (/bor|gergaji|kunci|palu|tang|pahat|perkakas|mesin las|kompresor|gerinda|tool kit/i.test(cleanVal)) {
+  } else if (/\b(bor|gergaji|kunci|palu|tang|pahat|perkakas|mesin las|kompresor|gerinda|tool kit)\b/i.test(cleanVal)) {
     detectedCatCode = 'PKJ';
-  } else if (/genset|pompa|tangga|pemadam|apar|blower|hidran|water pump|generating set/i.test(cleanVal)) {
+  } else if (/\b(genset|pompa|tangga|pemadam|apar|blower|hidran|water pump|generating set)\b/i.test(cleanVal)) {
     detectedCatCode = 'AGN';
-  } else if (/buku|stempel|arsip|dokumen|kardex|surat/i.test(cleanVal)) {
+  } else if (/\b(buku|stempel|arsip|dokumen|kardex|surat)\b/i.test(cleanVal)) {
     detectedCatCode = 'ADM';
-  } else if (/bola|raket|tenis|olahraga|fitness|senam|lapangan/i.test(cleanVal)) {
+  } else if (/\b(bola|raket|tenis|olahraga|fitness|senam|lapangan)\b/i.test(cleanVal)) {
     detectedCatCode = 'OLH';
-  } else if (/mesin ketik|fotocopy|kertas|kantor|penghancur kertas|laminating|white board|papan|absensi|display/i.test(cleanVal)) {
+  } else if (/\b(mesin ketik|fotocopy|kertas|kantor|penghancur kertas|laminating|white board|papan|absensi|display)\b/i.test(cleanVal)) {
     detectedCatCode = 'KNT';
   }
 
@@ -2874,12 +2875,10 @@ function updateCategorySpecificFields() {
 
   const isElektronik = catCode === 'ELE' || 
     catName.toLowerCase().includes('elektronik') || 
-    catName.toLowerCase().includes('komputer') || 
-    /\b(laptop|komputer|pc|printer|tv|ac|proyektor|kamera|camera|hp|tablet|gadget|handphone|smartphone|router|cctv|server|scanner|ups|genset|sound|toa|mic)\b/i.test(assetName);
+    catName.toLowerCase().includes('komputer');
 
   const isKendaraan = catCode === 'KND' || 
-    catName.toLowerCase().includes('kendaraan') || 
-    /\b(mobil|motor|sepeda|bus|truk|truck|pickup|pick up|ambulance|nmax|vario|beat|avanza|innova|hilux|scoopy|pcx|crv|hrv|pajero|fortuner)\b/i.test(assetName);
+    catName.toLowerCase().includes('kendaraan');
 
   const eleBox = document.getElementById('box-category-elektronik');
   const kndBox = document.getElementById('box-category-kendaraan');
