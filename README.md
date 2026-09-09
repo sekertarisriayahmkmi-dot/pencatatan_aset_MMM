@@ -1,6 +1,6 @@
-# Sistem Pencatatan & Manajemen Aset - Masjid Kapal Munzalan (MKMI)
+# Sistem Pencatatan & Manajemen Aset - Masjid Munzalan Mubarakan
 
-Aplikasi pencatatan, inventarisasi, depresiasi aset, dan QR code generator untuk Masjid Kapal Munzalan.
+Aplikasi pencatatan, inventarisasi, depresiasi aset, dan QR code generator untuk Masjid Munzalan Mubarakan.
 
 ## Fitur Utama
 - **Dashboard & Statistik Aset**: Total nilai aset, kategori, dan kondisi aset.
@@ -11,4 +11,4 @@ Aplikasi pencatatan, inventarisasi, depresiasi aset, dan QR code generator untuk
 - **Multi-Role & Database Terintegrasi**: Terhubung dengan Supabase.
 
 ---
-*Developed for Sekretariat Riayah Masjid Kapal Munzalan Indonesia (MKMI)*
+*Developed for Sekretariat Riayah Masjid Munzalan Mubarakan Indonesia (MKMI)*

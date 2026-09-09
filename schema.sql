@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS divisions (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   code TEXT,
-  parent TEXT DEFAULT 'Masjid Kapal Munzalan',
+  parent TEXT DEFAULT 'Masjid Munzalan Mubarakan',
   logo TEXT DEFAULT 'logo-munzalan.png',
   pj TEXT,
   phone TEXT,

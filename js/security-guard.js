@@ -13,7 +13,7 @@
     try {
       console.clear();
       console.log(
-        '%c🕌 SISTEM MANAJEMEN ASET MASJID KAPAL MUNZALAN 🕌',
+        '%c🕌 SISTEM MANAJEMEN ASET MASJID MUNZALAN MUBARAKAN 🕌',
         'color: #10b981; font-size: 20px; font-weight: 900; background: #064e3b; padding: 8px 16px; border-radius: 8px;'
       );
       console.log(
@@ -110,6 +110,6 @@
   window.SecurityGuard = {
     status: 'ACTIVE',
     version: '1.0.0',
-    institution: 'Masjid Kapal Munzalan'
+    institution: 'Masjid Munzalan Mubarakan'
   };
 })();

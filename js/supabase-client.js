@@ -119,7 +119,7 @@ const SupabaseEngine = {
           id: d.id,
           name: d.name,
           code: d.code || '',
-          parent: d.parent || 'Masjid Kapal Munzalan',
+          parent: d.parent || 'Masjid Munzalan Mubarakan',
           logo: d.logo || 'logo-munzalan.png',
           pj: d.pj || '',
           phone: d.phone || ''

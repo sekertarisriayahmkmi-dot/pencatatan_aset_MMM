@@ -34,14 +34,14 @@ const DEFAULT_BRANCHES = [
 
 // Initial Sample Divisions / Units
 const DEFAULT_DIVISIONS = [
-  { id: 'DIV-001', name: 'Divisi Riayah & Sarpras', parent: 'Masjid Kapal Munzalan', logo: 'logo-munzalan.png', code: 'RIAYAH', pj: 'Divisi Riayah' },
+  { id: 'DIV-001', name: 'Divisi Riayah & Sarpras', parent: 'Masjid Munzalan Mubarakan', logo: 'logo-munzalan.png', code: 'RIAYAH', pj: 'Divisi Riayah' },
   { id: 'DIV-002', name: 'Pondok & Pendidikan Santri', parent: 'Yayasan Munzalan', logo: 'logo-munzalan.png', code: 'PONDOK', pj: 'Biro Pendidikan' },
-  { id: 'DIV-003', name: 'Kantor Sekretariat & Humas', parent: 'Masjid Kapal Munzalan', logo: 'logo-munzalan.png', code: 'SEKRET', pj: 'Sekretariat' }
+  { id: 'DIV-003', name: 'Kantor Sekretariat & Humas', parent: 'Masjid Munzalan Mubarakan', logo: 'logo-munzalan.png', code: 'SEKRET', pj: 'Sekretariat' }
 ];
 
 // Default System Settings
 const DEFAULT_SETTINGS = {
-  instansiName: 'MASJID KAPAL MUNZALAN MUBARAKAN',
+  instansiName: 'MASJID MUNZALAN MUBARAKAN',
   instansiParent: 'PENCATATAN ASET & INVENTARIS RIAYAH',
   instansiAddress: 'Jl. Sungai Raya Dalam Gg. Imaduddin, Kubu Raya / Pontianak, Kalimantan Barat',
   instansiPhone: '0812-5555-9900 / (0561) 789100',
@@ -68,7 +68,7 @@ const DEFAULT_SETTINGS = {
   codeSequenceMode: 'category_room' // 'category_room', 'category', 'room', 'global'
 };
 
-// Master 12 Lokasi / Ruangan Resmi Masjid Kapal Munzalan
+// Master 12 Lokasi / Ruangan Resmi Masjid Munzalan Mubarakan
 const DEFAULT_ROOMS = [
   { id: 'RM-RUT', code: 'RUT', name: 'Ruang Utama', floor: 'Area Sholat Utama, Mihrab, Mimbar', pj: 'Ust. Syahril', pjNip: '19840210 200902 1 002', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
   { id: 'RM-KNTR', code: 'KNTR', name: 'Kantor Sekretariat', floor: 'Ruang Kerja Pengelola Masjid', pj: 'Drs. H. Bambang Sudrajat', pjNip: '19720415 199803 1 004', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
@@ -80,8 +80,8 @@ const DEFAULT_ROOMS = [
   { id: 'RM-PKRN', code: 'PKRN', name: 'Pekarangan / Halaman', floor: 'Area Luar Masjid, Taman, Parkiran', pj: 'Supardi', pjNip: '19820710 200801 1 007', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
   { id: 'RM-AULA', code: 'AULA', name: 'Aula / Ruang Serbaguna', floor: 'Ruang Pertemuan / Kegiatan', pj: 'Wahyudi, M.Pd', pjNip: '19800714 200501 1 008', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
   { id: 'RM-POS', code: 'POS', name: 'Pos Jaga', floor: 'Pos Keamanan / Penjagaan', pj: 'Danang Kusuma', pjNip: '19850920 201001 1 009', divisionId: 'DIV-001', divisionName: 'Divisi Riayah & Sarpras' },
-  { id: 'RM-MNJ', code: 'MNJ', name: 'Masjid Kapal Munzalan Jakarta', floor: 'Aset Cabang Lokasi Jakarta', pj: 'Ust. Ilham Pratama', pjNip: '19910425 201601 1 011', divisionId: 'DIV-003', divisionName: 'Cabang & Perwakilan' },
-  { id: 'RM-MTJ', code: 'MTJ', name: 'Masjid Kapal Munzalan Tujuh', floor: 'Aset Cabang Lokasi Cabang ke-7', pj: 'Ust. Faturrahman', pjNip: '19930811 201801 1 012', divisionId: 'DIV-003', divisionName: 'Cabang & Perwakilan' }
+  { id: 'RM-MNJ', code: 'MNJ', name: 'Masjid Munzalan Mubarakan Jakarta', floor: 'Aset Cabang Lokasi Jakarta', pj: 'Ust. Ilham Pratama', pjNip: '19910425 201601 1 011', divisionId: 'DIV-003', divisionName: 'Cabang & Perwakilan' },
+  { id: 'RM-MTJ', code: 'MTJ', name: 'Masjid Munzalan Mubarakan Tujuh', floor: 'Aset Cabang Lokasi Cabang ke-7', pj: 'Ust. Faturrahman', pjNip: '19930811 201801 1 012', divisionId: 'DIV-003', divisionName: 'Cabang & Perwakilan' }
 ];
 
 // Master 11 Kategori Resmi Standar Munzalan

@@ -7869,7 +7869,7 @@ function printBAMutasi(mutationId) {
 
       <!-- Pembuka -->
       <p style="text-align: justify; margin-bottom: 12px; font-size: 9.5pt;">
-        Pada hari ini, tanggal <strong>${m.date}</strong>, telah dilaksanakan serah terima pemindahan lokasi fisik (mutasi) dan peralihan tanggung jawab pengelolaan barang inventaris milik <strong>${settings.instansiName || 'Masjid Kapal Munzalan Mubarakan'}</strong> antara pihak-pihak di bawah ini:
+        Pada hari ini, tanggal <strong>${m.date}</strong>, telah dilaksanakan serah terima pemindahan lokasi fisik (mutasi) dan peralihan tanggung jawab pengelolaan barang inventaris milik <strong>${settings.instansiName || 'Masjid Munzalan Mubarakan'}</strong> antara pihak-pihak di bawah ini:
       </p>
 
       <!-- Pihak 1 & Pihak 2 -->
@@ -8424,7 +8424,7 @@ function openModalTambahDivisi(divId = null) {
     if (title) title.textContent = 'Tambah Divisi / Unit Baru';
     if (idInput) idInput.value = '';
     if (nameInput) nameInput.value = '';
-    if (parentInput) parentInput.value = 'Masjid Kapal Munzalan';
+    if (parentInput) parentInput.value = 'Masjid Munzalan Mubarakan';
     if (codeInput) codeInput.value = '';
     if (pjInput) pjInput.value = '';
     temporaryDivisionLogo = '';
@@ -8494,7 +8494,7 @@ function saveDivisionForm(event) {
       const newDiv = {
         id: 'DIV-' + Date.now().toString().slice(-4),
         name,
-        parent: parent || 'Masjid Kapal Munzalan',
+        parent: parent || 'Masjid Munzalan Mubarakan',
         code: code || 'DIV',
         pj: pj || '',
         logo: temporaryDivisionLogo || 'logo-munzalan.png'
