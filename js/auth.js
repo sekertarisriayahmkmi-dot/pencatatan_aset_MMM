@@ -104,6 +104,20 @@ const AuthEngine = {
       users.push(user);
     }
     this.saveUsers(users);
+
+    // Sync session if currently logged-in user was modified
+    const currentSession = this.getCurrentUser();
+    if (currentSession && ((user.id && currentSession.userId === user.id) || (user.username && currentSession.username === user.username))) {
+      const updatedUser = idx >= 0 ? users[idx] : user;
+      const newSession = {
+        ...currentSession,
+        displayName: updatedUser.displayName || currentSession.displayName,
+        role: updatedUser.role || currentSession.role,
+        scopeId: updatedUser.scopeId,
+        scopeName: updatedUser.scopeName
+      };
+      localStorage.setItem(this.SESSION_KEY, JSON.stringify(newSession));
+    }
   },
 
   deleteUser(id) {
@@ -160,7 +174,19 @@ const AuthEngine = {
   getCurrentUser() {
     try {
       const raw = localStorage.getItem(this.SESSION_KEY);
-      return raw ? JSON.parse(raw) : null;
+      if (!raw) return null;
+      const session = JSON.parse(raw);
+      if (session && (session.userId || session.username)) {
+        const users = this.getUsers();
+        const u = users.find(x => (session.userId && x.id === session.userId) || (session.username && x.username.toLowerCase() === session.username.toLowerCase()));
+        if (u) {
+          session.role = u.role;
+          session.scopeId = u.scopeId;
+          session.scopeName = u.scopeName;
+          session.displayName = u.displayName;
+        }
+      }
+      return session;
     } catch (e) {
       return null;
     }

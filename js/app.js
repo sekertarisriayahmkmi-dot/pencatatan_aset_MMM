@@ -135,6 +135,17 @@ function applyRoleUI() {
     if (tabBackup) tabBackup.style.display = 'none';
     if (tabUsers) tabUsers.style.display = 'none';
     if (tabDatabase) tabDatabase.style.display = 'none';
+
+    // Explicitly hide non-allowed subviews
+    const forbiddenViews = ['set-view-cabang', 'set-view-divisi', 'set-view-kategori', 'set-view-kode', 'set-view-depresiasi', 'set-view-backup', 'set-view-users', 'set-view-database'];
+    forbiddenViews.forEach(vid => {
+      const el = document.getElementById(vid);
+      if (el) el.classList.add('hidden');
+    });
+    const activeTabBtn = document.querySelector('.settings-tab-btn.active');
+    if (activeTabBtn && ['set-tab-users', 'set-tab-database', 'set-tab-cabang', 'set-tab-divisi', 'set-tab-kategori', 'set-tab-kode', 'set-tab-depresiasi', 'set-tab-backup'].includes(activeTabBtn.id)) {
+      switchSettingsTab('profil');
+    }
   } else if (AuthEngine.isWilayah()) {
     if (tabProfil) { tabProfil.style.display = ''; tabProfil.textContent = 'Profil & Kop Cabang'; }
     if (tabCabang) tabCabang.style.display = 'none';
@@ -146,6 +157,17 @@ function applyRoleUI() {
     if (tabBackup) tabBackup.style.display = 'none';
     if (tabUsers) tabUsers.style.display = 'none';
     if (tabDatabase) tabDatabase.style.display = 'none';
+
+    // Explicitly hide non-allowed subviews
+    const forbiddenViews = ['set-view-cabang', 'set-view-divisi', 'set-view-kategori', 'set-view-kode', 'set-view-depresiasi', 'set-view-backup', 'set-view-users', 'set-view-database'];
+    forbiddenViews.forEach(vid => {
+      const el = document.getElementById(vid);
+      if (el) el.classList.add('hidden');
+    });
+    const activeTabBtn = document.querySelector('.settings-tab-btn.active');
+    if (activeTabBtn && ['set-tab-users', 'set-tab-database', 'set-tab-cabang', 'set-tab-divisi', 'set-tab-kategori', 'set-tab-kode', 'set-tab-depresiasi', 'set-tab-backup'].includes(activeTabBtn.id)) {
+      switchSettingsTab('profil');
+    }
   }
 
   // 3. Sidebar: show scope badge for non-admin
@@ -8756,14 +8778,23 @@ function openModalTambahRuangan(roomId = null) {
 
   // Populate Branch dropdown
   const branches = db.getBranches();
+  const pusatBranch = branches.find(b => b.isPusat) || branches[0];
+
   if (branchSelect) {
     branchSelect.innerHTML = branches.map(b => `<option value="${b.id}">${b.isPusat ? '🏢' : '📍'} ${b.name}</option>`).join('');
     // Auto-lock user's branch if user is wilayah
-    if (isWilayah && user?.scopeId) {
-      branchSelect.value = user.scopeId;
+    if (isWilayah && (user?.scopeId || user?.scopeName)) {
+      let targetBranch = branches.find(b => (user?.scopeId && b.id === user.scopeId) || (user?.scopeName && b.name.toLowerCase() === user.scopeName.toLowerCase()));
+      if (targetBranch) branchSelect.value = targetBranch.id;
       branchSelect.disabled = true;
       branchSelect.classList.add('bg-slate-100', 'dark:bg-slate-800', 'cursor-not-allowed', 'opacity-80');
-      if (branchBadge) branchBadge.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-emerald-500 font-bold"><i data-lucide="lock" class="w-3 h-3"></i> [${user.scopeName || 'Cabang'}]</span>`;
+      if (branchBadge) branchBadge.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-emerald-500 font-bold"><i data-lucide="lock" class="w-3 h-3"></i> [${targetBranch?.name || user.scopeName || 'Cabang'}]</span>`;
+    } else if (isDivisi) {
+      // Divisi user is automatically stationed at Pusat
+      if (pusatBranch) branchSelect.value = pusatBranch.id;
+      branchSelect.disabled = true;
+      branchSelect.classList.add('bg-slate-100', 'dark:bg-slate-800', 'cursor-not-allowed', 'opacity-80');
+      if (branchBadge) branchBadge.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-emerald-500 font-bold"><i data-lucide="lock" class="w-3 h-3"></i> [${pusatBranch?.name || 'Munzalan Pusat'}]</span>`;
     } else {
       branchSelect.disabled = false;
       branchSelect.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'cursor-not-allowed', 'opacity-80');
@@ -8777,12 +8808,30 @@ function openModalTambahRuangan(roomId = null) {
   if (divSelect) {
     divSelect.innerHTML = `<option value="">🏛️ Standar Lembaga (${settings.instansiName || 'Munzalan'})</option>` +
       divisions.map(d => `<option value="${d.id}">🏢 ${d.name} (${d.code || 'DIV'})</option>`).join('');
+    
     // Auto-lock user's division if user is divisi
-    if (isDivisi && user?.scopeId) {
-      divSelect.value = user.scopeId;
+    if (isDivisi) {
+      let targetDiv = null;
+      if (user?.scopeId) {
+        targetDiv = divisions.find(d => d.id === user.scopeId || d.name.toLowerCase() === user.scopeId.toLowerCase());
+      }
+      if (!targetDiv && user?.scopeName) {
+        targetDiv = divisions.find(d => d.name.toLowerCase() === user.scopeName.toLowerCase() || d.id === user.scopeName);
+      }
+      if (!targetDiv && user?.displayName) {
+        targetDiv = divisions.find(d => user.displayName.toLowerCase().includes(d.name.toLowerCase()) || d.name.toLowerCase().includes(user.displayName.toLowerCase()));
+      }
+      if (!targetDiv && divisions.length > 0) {
+        targetDiv = divisions[0];
+      }
+
+      if (targetDiv) {
+        divSelect.value = targetDiv.id;
+      }
       divSelect.disabled = true;
       divSelect.classList.add('bg-slate-100', 'dark:bg-slate-800', 'cursor-not-allowed', 'opacity-80');
-      if (divBadge) divBadge.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-amber-500 font-bold"><i data-lucide="lock" class="w-3 h-3"></i> [${user.scopeName || 'Divisi'}]</span>`;
+      const divLabel = targetDiv ? targetDiv.name : (user?.scopeName || user?.displayName || 'Divisi');
+      if (divBadge) divBadge.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-amber-500 font-bold"><i data-lucide="lock" class="w-3 h-3"></i> [${divLabel}]</span>`;
     } else {
       divSelect.disabled = false;
       divSelect.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'cursor-not-allowed', 'opacity-80');
@@ -8798,7 +8847,7 @@ function openModalTambahRuangan(roomId = null) {
     if (codeInput) codeInput.value = r.code || '';
     if (nameInput) nameInput.value = r.name;
     if (floorInput) floorInput.value = r.floor || '';
-    if (branchSelect && r.branchId && (!isWilayah || !user?.scopeId)) branchSelect.value = r.branchId;
+    if (branchSelect && r.branchId && (!isWilayah || !user?.scopeId) && !isDivisi) branchSelect.value = r.branchId;
     if (divSelect && r.divisionId && (!isDivisi || !user?.scopeId)) divSelect.value = r.divisionId;
     if (pjInput) pjInput.value = r.pj || '';
     if (nipInput) nipInput.value = r.pjNip || '';
@@ -8865,22 +8914,41 @@ function saveRoomForm(event) {
   const floor = document.getElementById('form-room-floor').value.trim();
   
   const branchSelect = document.getElementById('form-room-branch');
-  let branchId = (isWilayah && user?.scopeId) ? user.scopeId : (branchSelect ? branchSelect.value : null);
+  const branches = db.getBranches();
+  const pusatBranch = branches.find(b => b.isPusat) || branches[0];
+
+  let branchId = null;
+  if (isWilayah && user?.scopeId) {
+    branchId = user.scopeId;
+  } else if (isDivisi) {
+    branchId = pusatBranch ? pusatBranch.id : 'BR-001';
+  } else {
+    branchId = branchSelect ? branchSelect.value : (pusatBranch ? pusatBranch.id : 'BR-001');
+  }
+
   let branchName = '';
   if (branchId) {
     const b = db.getBranchById(branchId);
-    branchName = b ? b.name : (user?.scopeId === branchId ? user.scopeName : '');
-  }
-  if (!branchName && branchSelect && branchSelect.selectedIndex >= 0) {
-    branchName = branchSelect.options[branchSelect.selectedIndex].text.replace(/^[🏢📍]\s*/, '');
+    branchName = b ? b.name : (user?.scopeId === branchId ? user.scopeName : (pusatBranch ? pusatBranch.name : 'Munzalan Pusat'));
   }
 
   const divSelect = document.getElementById('form-room-division');
-  let divisionId = (isDivisi && user?.scopeId) ? user.scopeId : (divSelect ? divSelect.value : '');
+  const divisions = db.getDivisions();
+  let divisionId = '';
+  if (isDivisi) {
+    let matchedDiv = null;
+    if (user?.scopeId) matchedDiv = divisions.find(d => d.id === user.scopeId || d.name.toLowerCase() === user.scopeId.toLowerCase());
+    if (!matchedDiv && user?.scopeName) matchedDiv = divisions.find(d => d.name.toLowerCase() === user.scopeName.toLowerCase() || d.id === user.scopeName);
+    if (!matchedDiv && user?.displayName) matchedDiv = divisions.find(d => user.displayName.toLowerCase().includes(d.name.toLowerCase()) || d.name.toLowerCase().includes(user.displayName.toLowerCase()));
+    divisionId = matchedDiv ? matchedDiv.id : (divSelect?.value || user?.scopeId || '');
+  } else {
+    divisionId = divSelect ? divSelect.value : '';
+  }
+
   let divisionName = '';
   if (divisionId) {
     const d = db.getDivisionById(divisionId);
-    divisionName = d ? d.name : (user?.scopeId === divisionId ? user.scopeName : '');
+    divisionName = d ? d.name : (user?.scopeName || user?.displayName || 'Standar Lembaga');
   }
 
   const pj = document.getElementById('form-room-pj').value.trim();
