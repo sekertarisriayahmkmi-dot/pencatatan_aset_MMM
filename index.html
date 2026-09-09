@@ -4542,57 +4542,6 @@
     </div>
   </div>
 
-  <!-- ======================================================== -->
-  <!-- MODAL: TAMBAH RUANGAN -->
-  <!-- ======================================================== -->
-  <div id="modal-ruangan" class="modal-overlay hidden">
-    <div class="modal-card max-w-md">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-        <h3 class="font-bold font-heading text-slate-900 dark:text-slate-100" id="modal-ruangan-title">Tambah Ruangan Baru</h3>
-        <button onclick="closeModal('modal-ruangan')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <form id="form-ruangan" onsubmit="handleSaveRoom(event)" class="space-y-4 pt-3">
-        <input type="hidden" id="room-form-id">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div class="sm:col-span-1">
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Ruangan *</label>
-            <input type="text" id="room-code" required maxlength="6" class="form-input font-mono uppercase font-bold text-xs" placeholder="Misal: RUT">
-          </div>
-          <div class="sm:col-span-2">
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Ruangan *</label>
-            <input type="text" id="room-name" required class="form-input text-xs" placeholder="Contoh: Ruang Utama / Kantor">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Gedung / Lantai / Keterangan Area</label>
-          <input type="text" id="room-floor" class="form-input text-xs" placeholder="Contoh: Area Sholat Utama, Mihrab, Mimbar">
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Penanggung Jawab</label>
-            <input type="text" id="room-pj" class="form-input text-xs" placeholder="Contoh: Supriyadi, S.Pd">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Amanah / Jabatan Penanggung Jawab</label>
-            <input type="text" id="room-pj-nip" class="form-input text-xs" placeholder="Contoh: Koordinator Riayah / Marbot / Staf">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Divisi / Unit Pengelola Ruangan</label>
-          <select id="room-division" class="form-input text-xs">
-            <!-- Populated via JS -->
-          </select>
-        </div>
-        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <button type="button" onclick="closeModal('modal-ruangan')" class="btn-secondary text-xs">Batal</button>
-          <button type="submit" class="btn-primary text-xs">Simpan Ruangan</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- ======================================================== -->
   <!-- MODAL: TAMBAH KATEGORI -->
@@ -4909,9 +4858,15 @@
       <form onsubmit="saveRoomForm(event)" class="space-y-3.5">
         <input type="hidden" id="form-room-id">
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Ruangan / Lokasi: <span class="text-rose-500">*</span></label>
-          <input type="text" id="form-room-name" required class="form-input text-xs" placeholder="Contoh: Laboratorium Komputer 1 / Gudang Sarpras">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-1">
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Ruang:</label>
+            <input type="text" id="form-room-code" maxlength="8" class="form-input font-mono uppercase font-bold text-xs" placeholder="Auto: KTR">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Ruangan / Lokasi: <span class="text-rose-500">*</span></label>
+            <input type="text" id="form-room-name" required class="form-input text-xs" placeholder="Contoh: Kantor Riayah / Laboratorium 1">
+          </div>
         </div>
 
         <div>
@@ -5685,17 +5640,17 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- APPLICATION SCRIPTS -->
-  <script src="js/master-barang.js?v=2.7.6"></script>
-  <script src="js/db.js?v=2.7.6"></script>
-  <script src="js/depreciation.js?v=2.7.6"></script>
-  <script src="js/qr-engine.js?v=2.7.6"></script>
-  <script src="js/reports.js?v=2.7.6"></script>
+  <script src="js/master-barang.js?v=2.7.7"></script>
+  <script src="js/db.js?v=2.7.7"></script>
+  <script src="js/depreciation.js?v=2.7.7"></script>
+  <script src="js/qr-engine.js?v=2.7.7"></script>
+  <script src="js/reports.js?v=2.7.7"></script>
   <!-- Supabase Cloud Engine -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js?v=2.7.6"></script>
+  <script src="js/supabase-client.js?v=2.7.7"></script>
   <!-- Auth Engine: Must be AFTER db.js and BEFORE app.js -->
-  <script src="js/auth.js?v=2.7.6"></script>
-  <script src="js/app.js?v=2.7.6"></script>
+  <script src="js/auth.js?v=2.7.7"></script>
+  <script src="js/app.js?v=2.7.7"></script>
   
   <script>
     // Initialize Lucide Icons on initial load & trigger background spreadsheet sync

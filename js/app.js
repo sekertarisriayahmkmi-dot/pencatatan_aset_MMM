@@ -8579,10 +8579,11 @@ function renderSettingsRoomTable() {
 
   if (rooms.length === 0) {
     const scope = (typeof AuthEngine !== 'undefined') ? AuthEngine.getScope() : null;
+    const scopeLabel = (scope && scope.name && !AuthEngine.isAdmin()) ? `untuk ${scope.name}` : '';
     tbody.innerHTML = `
       <tr>
         <td colspan="6" class="px-4 py-8 text-center text-slate-400">
-          Belum ada master ruangan ${scope && scope.name ? `untuk ${scope.name}` : ''}. Klik "Tambah Ruangan" untuk menambahkan.
+          Belum ada master ruangan ${scopeLabel}. Klik "+ Tambah Ruangan" untuk menambahkan.
         </td>
       </tr>
     `;
@@ -8602,7 +8603,12 @@ function renderSettingsRoomTable() {
             <span class="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 flex-shrink-0">
               <i data-lucide="door-closed" class="w-4 h-4"></i>
             </span>
-            <span>${r.name}</span>
+            <div>
+              <div class="flex items-center gap-1.5 font-bold">
+                ${r.code ? `<span class="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono text-[10px] font-extrabold border border-blue-500/20">${r.code}</span>` : ''}
+                <span>${r.name}</span>
+              </div>
+            </div>
           </div>
         </td>
         <td class="px-4 py-3 text-xs text-slate-700 dark:text-slate-300">
@@ -8639,6 +8645,14 @@ function renderSettingsRoomTable() {
 
   if (window.lucide) lucide.createIcons();
 }
+
+window.renderSettingsRoomTable = renderSettingsRoomTable;
+window.openModalTambahRuangan = openModalTambahRuangan;
+window.openModalEditRuangan = openModalTambahRuangan;
+window.openEditCurrentRoomModal = openEditCurrentRoomModal;
+window.saveRoomForm = saveRoomForm;
+window.deleteRoom = deleteRoom;
+window.handleDeleteRoom = deleteRoom;
 
 function loadProfileSettingsForm() {
   const s = (typeof db !== 'undefined' && db.getScopeSettings) ? db.getScopeSettings() : db.getSettings();
@@ -8725,6 +8739,7 @@ function saveProfileSettings(notify = false) {
 function openModalTambahRuangan(roomId = null) {
   const title = document.getElementById('modal-room-title');
   const idInput = document.getElementById('form-room-id');
+  const codeInput = document.getElementById('form-room-code');
   const nameInput = document.getElementById('form-room-name');
   const floorInput = document.getElementById('form-room-floor');
   const branchSelect = document.getElementById('form-room-branch');
@@ -8761,6 +8776,7 @@ function openModalTambahRuangan(roomId = null) {
     if (!r) return;
     if (title) title.textContent = 'Edit Ruangan & Lokasi';
     if (idInput) idInput.value = r.id;
+    if (codeInput) codeInput.value = r.code || '';
     if (nameInput) nameInput.value = r.name;
     if (floorInput) floorInput.value = r.floor || '';
     if (branchSelect && r.branchId) branchSelect.value = r.branchId;
@@ -8770,6 +8786,7 @@ function openModalTambahRuangan(roomId = null) {
   } else {
     if (title) title.textContent = 'Tambah Ruangan Baru';
     if (idInput) idInput.value = '';
+    if (codeInput) codeInput.value = '';
     if (nameInput) nameInput.value = '';
     if (floorInput) floorInput.value = '';
     if (pjInput) pjInput.value = '';
@@ -8803,10 +8820,24 @@ function previewRoomDivisionLogo() {
   }
 }
 
+function generateRoomCodeHelper(name) {
+  if (!name) return 'RUM';
+  const words = name.trim().split(/\s+/);
+  if (words.length >= 3) {
+    return (words[0][0] + words[1][0] + words[2][0]).toUpperCase();
+  } else if (words.length === 2) {
+    return (words[0].slice(0, 2) + words[1].slice(0, 2)).toUpperCase();
+  } else {
+    return name.slice(0, 4).toUpperCase();
+  }
+}
+
 function saveRoomForm(event) {
   event.preventDefault();
   const id = document.getElementById('form-room-id').value;
   const name = document.getElementById('form-room-name').value.trim();
+  const codeRaw = document.getElementById('form-room-code')?.value.trim();
+  const code = (codeRaw || generateRoomCodeHelper(name)).toUpperCase();
   const floor = document.getElementById('form-room-floor').value.trim();
   const branchSelect = document.getElementById('form-room-branch');
   const branchId = branchSelect ? branchSelect.value : null;
@@ -8833,6 +8864,7 @@ function saveRoomForm(event) {
     if (idx !== -1) {
       rooms[idx] = {
         ...rooms[idx],
+        code,
         name,
         floor,
         branchId,
@@ -8843,11 +8875,12 @@ function saveRoomForm(event) {
         pjNip
       };
       db.save(STORAGE_KEYS.ROOMS, rooms);
-      showToast(`Ruangan "${name}" berhasil diperbarui!`, 'success');
+      showToast(`✅ Ruangan "${name}" (${code}) berhasil diperbarui!`, 'success');
     }
   } else {
     const newRoom = {
       id: 'RM-' + Date.now().toString().slice(-4),
+      code,
       name,
       floor,
       branchId,
@@ -8859,7 +8892,7 @@ function saveRoomForm(event) {
     };
     rooms.push(newRoom);
     db.save(STORAGE_KEYS.ROOMS, rooms);
-    showToast(`Ruangan "${name}" berhasil ditambahkan!`, 'success');
+    showToast(`✅ Ruangan "${name}" (${code}) berhasil ditambahkan!`, 'success');
   }
 
   closeModal('modal-tambah-ruangan');
@@ -8869,6 +8902,8 @@ function saveRoomForm(event) {
   if (typeof renderRoomCards === 'function') renderRoomCards();
   if (typeof selectRoom === 'function') selectRoom(id || rooms[rooms.length - 1]?.id);
   if (typeof renderStickerCenter === 'function') renderStickerCenter();
+  if (typeof populateDropdowns === 'function') populateDropdowns();
+  if (typeof renderKIRPage === 'function') renderKIRPage();
 }
 
 function deleteRoom(id) {
@@ -8886,6 +8921,7 @@ function deleteRoom(id) {
     if (typeof renderKIRPage === 'function') renderKIRPage();
     if (typeof renderRoomCards === 'function') renderRoomCards();
     if (typeof renderStickerCenter === 'function') renderStickerCenter();
+    if (typeof populateDropdowns === 'function') populateDropdowns();
   }
 }
 
@@ -8978,31 +9014,6 @@ function handleUploadLogo(event) {
     }
   };
   reader.readAsDataURL(file);
-}
-
-function saveProfileSettings(notify = false) {
-  const current = db.getSettings();
-  const updated = {
-    ...current,
-    instansiName: document.getElementById('cfg-instansi-name').value.trim(),
-    instansiParent: document.getElementById('cfg-instansi-parent').value.trim(),
-    instansiAddress: document.getElementById('cfg-instansi-address').value.trim(),
-    instansiPhone: document.getElementById('cfg-instansi-phone').value.trim(),
-    instansiEmail: document.getElementById('cfg-instansi-email').value.trim(),
-    leaderTitle: document.getElementById('cfg-leader-title').value.trim(),
-    leaderName: document.getElementById('cfg-leader-name').value.trim(),
-    leaderNip: document.getElementById('cfg-leader-nip').value.trim(),
-    assetOfficerTitle: document.getElementById('cfg-asset-officer-title').value.trim(),
-    assetOfficerName: document.getElementById('cfg-asset-officer-name').value.trim(),
-    city: document.getElementById('cfg-city').value.trim(),
-    kopBannerImage: temporaryKopBanner,
-    useKopBanner: document.getElementById('cfg-use-kop-banner').checked,
-    logoImage: temporaryLogo
-  };
-
-  db.saveSettings(updated);
-  updateHeaderInstansiInfo();
-  if (notify) showToast('Pengaturan profil & Kop Surat berhasil disimpan!', 'success');
 }
 
 function saveDepreciationSettings() {
@@ -9188,95 +9199,18 @@ function resetCodeSettingsDefault() {
  * 17. MASTER RUANGAN & KATEGORI CRUD
  * ========================================================
  */
-function renderSettingsRoomTable() {
-  const rooms = db.getRooms();
-  const tbody = document.getElementById('settings-room-table-body');
-  if (!tbody) return;
-
-  tbody.innerHTML = rooms.map(r => `
-    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-      <td class="px-4 py-3">
-        <span class="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono font-bold text-xs border border-blue-500/20">${r.code || '-'}</span>
-      </td>
-      <td class="px-4 py-3 font-bold text-slate-800 dark:text-slate-100">${r.name}</td>
-      <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">${r.floor || '-'}</td>
-      <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">${r.divisionName || '-'}</td>
-      <td class="px-4 py-3 text-xs text-slate-700 dark:text-slate-300">${r.pj || '-'} ${r.pjNip ? `<span class="text-[10px] text-slate-400 block">(NIP: ${r.pjNip})</span>` : ''}</td>
-      <td class="px-4 py-3 text-center">
-        <button onclick="openModalEditRuangan('${r.id}')" class="p-1 text-amber-500 hover:underline text-xs font-semibold">Edit</button>
-        <button onclick="handleDeleteRoom('${r.id}')" class="p-1 text-rose-500 hover:underline ml-2 text-xs font-semibold">Hapus</button>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function populateRoomDivisionDropdown(selectedDivId = '') {
-  const select = document.getElementById('room-division');
-  if (!select) return;
-  const divisions = db.getDivisions();
-  select.innerHTML = '<option value="">-- Tanpa Divisi Khusus (Ikuti Lembaga) --</option>' +
-    divisions.map(d => `<option value="${d.id}">🏢 ${d.name} (${d.code || 'DIV'})</option>`).join('');
-  if (selectedDivId) select.value = selectedDivId;
-}
-
-function openModalTambahRuangan() {
-  document.getElementById('modal-ruangan-title').textContent = 'Tambah Ruangan Baru';
-  document.getElementById('form-ruangan').reset();
-  document.getElementById('room-form-id').value = '';
-  if (document.getElementById('room-code')) document.getElementById('room-code').value = '';
-  populateRoomDivisionDropdown();
-  openModal('modal-ruangan');
-}
-
 function openModalEditRuangan(roomId) {
-  const room = db.getRooms().find(r => r.id === roomId);
-  if (!room) return;
-
-  document.getElementById('modal-ruangan-title').textContent = 'Edit Ruangan';
-  document.getElementById('room-form-id').value = room.id;
-  if (document.getElementById('room-code')) document.getElementById('room-code').value = room.code || '';
-  document.getElementById('room-name').value = room.name;
-  document.getElementById('room-floor').value = room.floor || '';
-  document.getElementById('room-pj').value = room.pj || '';
-  document.getElementById('room-pj-nip').value = room.pjNip || '';
-  populateRoomDivisionDropdown(room.divisionId || '');
-  openModal('modal-ruangan');
+  openModalTambahRuangan(roomId);
 }
 
 function openEditCurrentRoomModal() {
-  if (currentSelectedRoomId) openModalEditRuangan(currentSelectedRoomId);
-}
-
-function handleSaveRoom(event) {
-  event.preventDefault();
-  const id = document.getElementById('room-form-id').value || `RM-${Date.now()}`;
-  const code = (document.getElementById('room-code')?.value || '').trim().toUpperCase() || 'RUM';
-  const name = document.getElementById('room-name').value.trim();
-  const floor = document.getElementById('room-floor').value.trim();
-  const pj = document.getElementById('room-pj').value.trim();
-  const pjNip = document.getElementById('room-pj-nip').value.trim();
-  const divisionId = document.getElementById('room-division')?.value || '';
-  const divObj = db.getDivisions().find(d => d.id === divisionId);
-  const divisionName = divObj ? divObj.name : '';
-
-  db.saveRoom({ id, code, name, floor, pj, pjNip, divisionId, divisionName });
-  closeModal('modal-ruangan');
-  showToast(`✅ Ruangan "${name}" (${code}) berhasil disimpan!`, 'success');
-
-  renderSettingsRoomTable();
-  renderRoomCards();
-  populateDropdowns();
-  if (currentSelectedRoomId === id) selectRoom(id);
+  if (typeof currentSelectedRoomId !== 'undefined' && currentSelectedRoomId) {
+    openModalTambahRuangan(currentSelectedRoomId);
+  }
 }
 
 function handleDeleteRoom(roomId) {
-  if (confirm('Apakah Anda yakin ingin menghapus ruangan ini?')) {
-    db.deleteRoom(roomId);
-    showToast('Ruangan berhasil dihapus.', 'info');
-    renderSettingsRoomTable();
-    renderRoomCards();
-    populateDropdowns();
-  }
+  deleteRoom(roomId);
 }
 
 function renderSettingsCategoryTable() {
@@ -10225,7 +10159,7 @@ function deleteBHPItem(id) {
 }
 
 // Export Excel Data BHP / Non-Inventaris
-function exportBHPToExcel() {
+function exportNonInventarisToExcel() {
   const items = db.getBHP();
   if (!items || items.length === 0) {
     showToast('Tidak ada data barang untuk diexport!', 'warning');
@@ -10952,6 +10886,21 @@ window.pullCloudDataToLocalUI = pullCloudDataToLocalUI;
 window.copySupabaseSchemaSQL = copySupabaseSchemaSQL;
 window.togglePasswordVisibility = togglePasswordVisibility;
 
-
-
-
+// Realtime cross-tab storage synchronizer
+window.addEventListener('storage', (e) => {
+  if (typeof STORAGE_KEYS !== 'undefined' && e.key) {
+    if (e.key === STORAGE_KEYS.ROOMS) {
+      if (typeof renderSettingsRoomTable === 'function') renderSettingsRoomTable();
+      if (typeof renderRoomCards === 'function') renderRoomCards();
+      if (typeof populateDropdowns === 'function') populateDropdowns();
+      if (typeof populateRoomDropdowns === 'function') populateRoomDropdowns();
+    } else if (e.key === STORAGE_KEYS.ASSETS) {
+      if (typeof renderAssetTable === 'function') renderAssetTable();
+      if (typeof renderDashboard === 'function') renderDashboard();
+    } else if (e.key === STORAGE_KEYS.DIVISIONS || e.key === STORAGE_KEYS.BRANCHES) {
+      if (typeof populateDropdowns === 'function') populateDropdowns();
+      if (typeof renderSettingsDivisionsTable === 'function') renderSettingsDivisionsTable();
+      if (typeof renderSettingsBranchTable === 'function') renderSettingsBranchTable();
+    }
+  }
+});
