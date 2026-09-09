@@ -9689,14 +9689,7 @@ function processExcelImport() {
     try {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(firstSheet);
-
-      if (!rows || rows.length === 0) {
-        showToast('File Excel kosong.', 'warning');
-        return;
-      }
-
+      
       const rooms = db.getRooms();
       const categories = db.getCategories();
       const divisions = (typeof db !== 'undefined' && db.getDivisions) ? db.getDivisions() : [];
@@ -9709,181 +9702,333 @@ function processExcelImport() {
       const targetDivFromModal = document.getElementById('import-target-division')?.value || '';
       const targetBranchFromModal = document.getElementById('import-target-branch')?.value || '';
 
-      // Track existing codes and sequence counts
       const existingCodes = new Set(allAssets.map(a => a.code));
       let nextSeq = allAssets.length + 1;
 
-      rows.forEach(r => {
-        const name = r['Nama Barang'] || r['nama_barang'] || r['Nama Aset'] || r['Nama'] || r['Barang'];
-        if (!name) return;
+      // Helper to clean price number
+      const parseCleanPrice = (val) => {
+        if (typeof val === 'number') return val;
+        if (!val) return 0;
+        const cleanStr = String(val).replace(/[^0-9,-]/g, '').replace(',', '.');
+        return parseFloat(cleanStr) || 0;
+      };
 
-        const catName = r['Kategori'] || r['kategori'] || 'Elektronik';
-        const roomName = r['Ruangan'] || r['ruangan'] || r['Lokasi'] || (rooms[0]?.name || 'Kantor Sekretariat');
-        const price = parseFloat(r['Harga Perolehan (Angka)'] || r['Harga Perolehan'] || r['Harga Satuan'] || r['Harga'] || r['harga']) || 0;
-        const lifespan = parseFloat(r['Masa Manfaat (Tahun)'] || r['Masa Manfaat'] || r['Umur Ekonomis']) || 5;
-        const condition = r['Kondisi (Baik/Rusak Ringan/Rusak Berat)'] || r['Kondisi'] || 'Baik';
-        const date = r['Tanggal Beli (YYYY-MM-DD)'] || r['Tanggal Beli'] || r['Tanggal Perolehan'] || r['Tanggal Diterima'] || new Date().toISOString().split('T')[0];
-        const dateYear = (date && date.length >= 4) ? date.substring(0, 4) : new Date().getFullYear();
+      // Process each sheet that might contain inventory assets
+      const sheetNames = workbook.SheetNames;
+      
+      // Determine sheets to process
+      let sheetsToProcess = sheetNames;
+      if (sheetNames.includes('Buku Induk Barang Iventaris') || sheetNames.includes('Buku Induk Barang Inventaris')) {
+        const mainSheet = sheetNames.find(s => s.toLowerCase().includes('buku induk') || s.toLowerCase().includes('kib') || s.toLowerCase().includes('template'));
+        sheetsToProcess = mainSheet ? [mainSheet] : [sheetNames[0]];
+      } else if (sheetNames.includes('Template Import')) {
+        sheetsToProcess = ['Template Import'];
+      }
 
-        const matchRoom = rooms.find(rm => rm.name.toLowerCase() === roomName.toLowerCase() || (rm.code && rm.code.toLowerCase() === roomName.toLowerCase())) || rooms[0];
-        const matchCat = categories.find(c => c.name.toLowerCase() === catName.toLowerCase() || (c.code && c.code.toLowerCase() === catName.toLowerCase())) || categories[0];
+      sheetsToProcess.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        if (!sheet) return;
 
-        // Determine Division
-        let divId = 'DIV-001';
-        let divName = 'Divisi Riayah & Sarpras';
-        let divCode = 'RIAYAH';
+        const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        if (!rawRows || rawRows.length === 0) return;
 
-        if (!isAdmin && user && user.role === 'divisi' && user.scopeId) {
-          divId = user.scopeId;
-          divName = user.scopeName || 'Divisi Riayah & Sarpras';
-          const dObj = divisions.find(d => d.id === divId);
-          divCode = dObj?.code || 'RIAYAH';
-        } else if (isAdmin && targetDivFromModal) {
-          divId = targetDivFromModal;
-          const dObj = divisions.find(d => d.id === divId);
-          divName = dObj?.name || 'Divisi Riayah & Sarpras';
-          divCode = dObj?.code || 'RIAYAH';
-        } else {
-          // Check Excel column
-          const excelDiv = r['Divisi'] || r['divisi'] || r['Divisi Pengelola'] || r['Divisi / Unit'];
-          if (excelDiv) {
-            const cleanD = String(excelDiv).toLowerCase().trim();
-            const dObj = divisions.find(d => d.name.toLowerCase() === cleanD || d.id.toLowerCase() === cleanD || (d.code && d.code.toLowerCase() === cleanD));
-            if (dObj) {
-              divId = dObj.id;
-              divName = dObj.name;
-              divCode = dObj.code || 'RIAYAH';
-            }
-          } else if (matchRoom && matchRoom.divisionId) {
-            const dObj = divisions.find(d => d.id === matchRoom.divisionId);
-            if (dObj) {
-              divId = dObj.id;
-              divName = dObj.name;
-              divCode = dObj.code || 'RIAYAH';
-            }
+        // 1. Smart Header Row Detection
+        let headerRowIdx = -1;
+        let colMap = {};
+
+        for (let r = 0; r < Math.min(rawRows.length, 15); r++) {
+          const row = rawRows[r].map(cell => String(cell || '').toLowerCase().trim());
+          const hasName = row.some(c => c.includes('nama') || c.includes('jenis barang') || c.includes('nama barang') || c.includes('nama aset'));
+          const hasCodeOrMerk = row.some(c => c.includes('kode') || c.includes('merk') || c.includes('merek') || c.includes('jumlah') || c.includes('satuan') || c.includes('harga'));
+          
+          if (hasName && hasCodeOrMerk) {
+            headerRowIdx = r;
+            // Build column map
+            row.forEach((cellText, colIdx) => {
+              if (cellText.includes('nama') || cellText.includes('jenis barang')) colMap.name = colIdx;
+              else if (cellText.includes('no. urut') || cellText.includes('no urut') || cellText.includes('no induk') || cellText.includes('no. induk')) colMap.noInduk = colIdx;
+              else if (cellText.includes('kode')) colMap.code = colIdx;
+              else if (cellText.includes('merk') || cellText.includes('merek') || cellText.includes('type')) colMap.brand = colIdx;
+              else if (cellText.includes('ukuran') || cellText.includes('size')) colMap.size = colIdx;
+              else if (cellText.includes('bahan') || cellText.includes('material')) colMap.material = colIdx;
+              else if (cellText.includes('tahun')) colMap.year = colIdx;
+              else if (cellText.includes('asal') || cellText.includes('sumber')) colMap.source = colIdx;
+              else if (cellText.includes('dokumen') || cellText.includes('kelengkapan')) colMap.doc = colIdx;
+              else if (cellText.includes('jumlah') || cellText.includes('qty')) colMap.qty = colIdx;
+              else if (cellText.includes('satuan') || cellText.includes('unit')) colMap.unit = colIdx;
+              else if (cellText.includes('kondisi')) colMap.condition = colIdx;
+              else if (cellText.includes('satuan (rp)') || cellText.includes('harga satuan')) colMap.unitPrice = colIdx;
+              else if (cellText.includes('jumlah ribuan') || cellText.includes('harga perolehan') || cellText.includes('harga')) colMap.totalPrice = colIdx;
+              else if (cellText.includes('ruang') || cellText.includes('lokasi')) colMap.room = colIdx;
+              else if (cellText.includes('divisi')) colMap.division = colIdx;
+              else if (cellText.includes('cabang') || cellText.includes('wilayah')) colMap.branch = colIdx;
+              else if (cellText.includes('kategori')) colMap.category = colIdx;
+              else if (cellText.includes('penanggung') || cellText.includes('pic')) colMap.pic = colIdx;
+              else if (cellText.includes('seri') || cellText.includes('serial')) colMap.serial = colIdx;
+              else if (cellText.includes('keterangan') || cellText.includes('catatan')) colMap.notes = colIdx;
+              else if (cellText.includes('tanggal')) colMap.date = colIdx;
+            });
+            break;
           }
         }
 
-        // Determine Branch / Wilayah
-        let branchId = null;
-        let branchName = null;
-
-        if (!isAdmin && user && user.role === 'wilayah' && user.scopeId) {
-          branchId = user.scopeId;
-          branchName = user.scopeName || 'Munzalan Cabang';
-        } else if (isAdmin && targetBranchFromModal) {
-          branchId = targetBranchFromModal;
-          const bObj = branches.find(b => b.id === branchId);
-          branchName = bObj?.name || 'Munzalan Cabang';
-        } else {
-          const excelBranch = r['Cabang / Wilayah'] || r['Cabang'] || r['Wilayah'] || r['cabang'] || r['wilayah'];
-          if (excelBranch) {
-            const cleanB = String(excelBranch).toLowerCase().trim();
-            const bObj = branches.find(b => b.name.toLowerCase() === cleanB || b.id.toLowerCase() === cleanB || (b.code && b.code.toLowerCase() === cleanB));
-            if (bObj) {
-              branchId = bObj.id;
-              branchName = bObj.name;
-            }
-          } else if (matchRoom && matchRoom.branchId) {
-            const bObj = branches.find(b => b.id === matchRoom.branchId);
-            if (bObj) {
-              branchId = bObj.id;
-              branchName = bObj.name;
-            }
+        if (headerRowIdx === -1 || colMap.name === undefined) {
+          // Fallback to standard sheet_to_json if header search not matched
+          const jsonRows = XLSX.utils.sheet_to_json(sheet);
+          if (jsonRows && jsonRows.length > 0) {
+            jsonRows.forEach(r => {
+              const name = r['Nama Barang'] || r['nama_barang'] || r['Nama/Jenis Barang'] || r['Nama Aset'] || r['Nama'] || r['Barang'];
+              if (!name) return;
+              processSingleAssetRow(r, null, rooms, categories, divisions, branches, allAssets, existingCodes, nextSeq++, user, isAdmin, targetDivFromModal, targetBranchFromModal);
+              importedCount++;
+            });
           }
+          return;
         }
 
-        // Determine Division Short Tag for Code & No. Induk
-        let divShortTag = 'RYH';
-        if (divCode === 'RIAYAH') divShortTag = 'RYH';
-        else if (divCode === 'PONDOK') divShortTag = 'PDK';
-        else if (divCode === 'SEKRET') divShortTag = 'SKR';
-        else if (divCode) divShortTag = divCode.substring(0, 3).toUpperCase();
+        // Iterate data rows
+        for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
+          const rowData = rawRows[r];
+          if (!rowData || rowData.length === 0) continue;
 
-        // 1. Nomor Induk (Auto-generate if missing in spreadsheet)
-        let noInduk = r['No Induk'] || r['No. Induk'] || r['Nomor Induk'] || r['no_induk'];
-        if (!noInduk) {
-          noInduk = `${String(nextSeq).padStart(3, '0')}/INV-${divShortTag}/${dateYear}`;
+          // Check if this row is just numbering subheader (e.g. 1, 2, 3, 4, 5...)
+          const isNumberingRow = rowData.filter(c => c !== '').every(c => !isNaN(c) && parseInt(c) < 30);
+          if (isNumberingRow && rowData.filter(c => c !== '').length > 5) continue;
+
+          const name = String(rowData[colMap.name] || '').trim();
+          if (!name || name === '-' || name.toLowerCase().includes('nama/jenis barang')) continue;
+
+          const rowObj = {
+            name: name,
+            noInduk: colMap.noInduk !== undefined ? rowData[colMap.noInduk] : '',
+            codeOrCat: colMap.code !== undefined ? String(rowData[colMap.code] || '').trim() : '',
+            brand: colMap.brand !== undefined ? String(rowData[colMap.brand] || '').trim() : '',
+            size: colMap.size !== undefined ? String(rowData[colMap.size] || '').trim() : '',
+            material: colMap.material !== undefined ? String(rowData[colMap.material] || '').trim() : '',
+            year: colMap.year !== undefined ? String(rowData[colMap.year] || '').trim() : '',
+            source: colMap.source !== undefined ? String(rowData[colMap.source] || '').trim() : '',
+            doc: colMap.doc !== undefined ? String(rowData[colMap.doc] || '').trim() : '',
+            qty: colMap.qty !== undefined ? parseInt(rowData[colMap.qty]) || 1 : 1,
+            unit: colMap.unit !== undefined ? String(rowData[colMap.unit] || 'Unit').trim() : 'Unit',
+            condition: colMap.condition !== undefined ? String(rowData[colMap.condition] || 'Baik').trim() : 'Baik',
+            unitPrice: colMap.unitPrice !== undefined ? parseCleanPrice(rowData[colMap.unitPrice]) : 0,
+            totalPrice: colMap.totalPrice !== undefined ? parseCleanPrice(rowData[colMap.totalPrice]) : 0,
+            room: colMap.room !== undefined ? String(rowData[colMap.room] || '').trim() : '',
+            division: colMap.division !== undefined ? String(rowData[colMap.division] || '').trim() : '',
+            branch: colMap.branch !== undefined ? String(rowData[colMap.branch] || '').trim() : '',
+            category: colMap.category !== undefined ? String(rowData[colMap.category] || '').trim() : '',
+            pic: colMap.pic !== undefined ? String(rowData[colMap.pic] || '').trim() : '',
+            serial: colMap.serial !== undefined ? String(rowData[colMap.serial] || '').trim() : '',
+            notes: colMap.notes !== undefined ? String(rowData[colMap.notes] || '').trim() : '',
+            date: colMap.date !== undefined ? String(rowData[colMap.date] || '').trim() : ''
+          };
+
+          createAndSaveAssetFromRowObj(rowObj, rooms, categories, divisions, branches, allAssets, existingCodes, nextSeq++, user, isAdmin, targetDivFromModal, targetBranchFromModal);
+          importedCount++;
         }
-
-        // 2. Kode Barang (Auto-generate if missing in spreadsheet)
-        let code = r['Kode Aset'] || r['kode_aset'] || r['Kode Barang'] || r['kode_barang'] || r['Kode'];
-        if (!code) {
-          const catPrefix = matchCat?.code || matchCat?.name?.substring(0, 3)?.toUpperCase() || 'ELE';
-          const roomPrefix = matchRoom?.code || matchRoom?.name?.substring(0, 3)?.toUpperCase() || 'RUT';
-          let candidateCode = `${divShortTag}-${catPrefix}-${roomPrefix}-${dateYear}-${String(nextSeq).padStart(3, '0')}`;
-          let attempt = nextSeq;
-          while (existingCodes.has(candidateCode)) {
-            attempt++;
-            candidateCode = `${divShortTag}-${catPrefix}-${roomPrefix}-${dateYear}-${String(attempt).padStart(3, '0')}`;
-          }
-          code = candidateCode;
-        }
-        existingCodes.add(code);
-
-        const newAsset = {
-          id: `AST-${Date.now()}-${Math.floor(Math.random()*1000)}-${nextSeq}`,
-          noInduk: String(noInduk),
-          code: String(code),
-          name: String(name),
-          namaBarang: String(name),
-          categoryId: matchCat ? matchCat.id : 'CAT-ELE',
-          categoryName: matchCat ? matchCat.name : catName,
-          categoryCode: matchCat ? matchCat.code : 'ELE',
-          roomId: matchRoom ? matchRoom.id : 'RM-KNTR',
-          roomName: matchRoom ? matchRoom.name : roomName,
-          roomCode: matchRoom ? matchRoom.code : 'KNTR',
-          divisionId: divId,
-          divisionName: divName,
-          divisionCode: divCode,
-          branchId: branchId || undefined,
-          branchName: branchName || undefined,
-          brand: String(r['Merek/Tipe'] || r['Merek'] || r['Merk'] || r['Merk/Type'] || ''),
-          brandType: String(r['Merek/Tipe'] || r['Merek'] || r['Merk'] || r['Merk/Type'] || ''),
-          serial: String(r['No. Seri'] || r['Serial'] || r['No Seri'] || ''),
-          serialNumber: String(r['No. Seri'] || r['Serial'] || r['No Seri'] || ''),
-          date: String(date),
-          tanggalDiterima: String(date),
-          price: price,
-          hargaJumlah: price,
-          unitPrice: price,
-          hargaSatuan: price,
-          qty: 1,
-          jumlahBarang: 1,
-          unit: 'Unit',
-          satuan: 'Unit',
-          lifespan: lifespan,
-          condition: condition,
-          kondisi: condition,
-          status: 'Aktif',
-          pic: String(r['Penanggung Jawab'] || r['PIC'] || ''),
-          source: String(r['Sumber Dana'] || r['Asal Barang'] || 'Pembelian'),
-          asalBarang: String(r['Sumber Dana'] || r['Asal Barang'] || 'Pembelian'),
-          image: '',
-          notes: String(r['Catatan'] || r['Keterangan'] || ''),
-          keterangan: String(r['Catatan'] || r['Keterangan'] || '')
-        };
-
-        db.saveAsset(newAsset);
-        nextSeq++;
-        importedCount++;
       });
 
       closeModal('modal-import');
-      showToast(`Berhasil mengimpor ${importedCount} aset baru dari Excel!`, 'success');
+      if (importedCount > 0) {
+        showToast(`Alhamdulillah! Berhasil mengimpor ${importedCount} aset baru dari Excel!`, 'success');
+      } else {
+        showToast('Tidak ada data aset yang berhasil dibaca dari file Excel. Pastikan nama barang terisi.', 'warning');
+      }
 
       renderAssetTable();
       renderDashboard();
       renderRoomCards();
       renderStickerGrid();
+      if (typeof renderKIBPage === 'function') renderKIBPage();
       updateNotificationCenter();
 
     } catch (err) {
       console.error('Import error', err);
-      showToast('Gagal memproses file Excel. Pastikan format kolom sesuai template.', 'danger');
+      showToast(`Gagal memproses file Excel: ${err.message || 'Format tidak dikenali'}`, 'danger');
     }
   };
   reader.readAsArrayBuffer(file);
+}
+
+function createAndSaveAssetFromRowObj(r, rooms, categories, divisions, branches, allAssets, existingCodes, seqNum, user, isAdmin, targetDivFromModal, targetBranchFromModal) {
+  const name = r.name;
+  const nameLower = name.toLowerCase();
+
+  // Smart Category Matcher
+  let matchCat = null;
+  if (r.category) {
+    matchCat = categories.find(c => c.name.toLowerCase() === r.category.toLowerCase() || (c.code && c.code.toLowerCase() === r.category.toLowerCase()));
+  }
+  if (!matchCat && r.codeOrCat) {
+    // If codeOrCat is a 3-letter code like 'PRB', 'ELE', 'ALB'
+    matchCat = categories.find(c => c.code.toUpperCase() === r.codeOrCat.toUpperCase() || c.id.includes(r.codeOrCat.toUpperCase()));
+  }
+  if (!matchCat) {
+    // Infer from name keywords
+    if (nameLower.includes('meja') || nameLower.includes('kursi') || nameLower.includes('rak') || nameLower.includes('lemari') || nameLower.includes('karpet') || nameLower.includes('mimbar')) {
+      matchCat = categories.find(c => c.code === 'PRB') || categories[1];
+    } else if (nameLower.includes('printer') || nameLower.includes('komputer') || nameLower.includes('pc') || nameLower.includes('laptop') || nameLower.includes('tv') || nameLower.includes('televisi') || nameLower.includes('ac') || nameLower.includes('air conditioner') || nameLower.includes('sound') || nameLower.includes('speaker') || nameLower.includes('proyektor') || nameLower.includes('jam dinding')) {
+      matchCat = categories.find(c => c.code === 'ELE') || categories[0];
+    } else if (nameLower.includes('pel') || nameLower.includes('sapu') || nameLower.includes('vacuum') || nameLower.includes('ember')) {
+      matchCat = categories.find(c => c.code === 'ALB') || categories[2];
+    } else if (nameLower.includes('mobil') || nameLower.includes('motor') || nameLower.includes('sepeda')) {
+      matchCat = categories.find(c => c.code === 'KND') || categories[6];
+    } else {
+      matchCat = categories[0] || { id: 'CAT-ELE', code: 'ELE', name: 'Elektronik', lifespan: 5 };
+    }
+  }
+
+  // Room Matcher
+  const roomName = r.room || (rooms[0]?.name || 'Kantor Sekretariat');
+  const matchRoom = rooms.find(rm => rm.name.toLowerCase() === roomName.toLowerCase() || (rm.code && rm.code.toLowerCase() === roomName.toLowerCase())) || rooms[0] || { id: 'RM-KNTR', name: 'Kantor Sekretariat', code: 'KNTR' };
+
+  // Division Matcher
+  let divId = 'DIV-001';
+  let divName = 'Divisi Riayah & Sarpras';
+  let divCode = 'RIAYAH';
+
+  if (!isAdmin && user && user.role === 'divisi' && user.scopeId) {
+    divId = user.scopeId;
+    divName = user.scopeName || 'Divisi Riayah & Sarpras';
+    const dObj = divisions.find(d => d.id === divId);
+    divCode = dObj?.code || 'RIAYAH';
+  } else if (isAdmin && targetDivFromModal) {
+    divId = targetDivFromModal;
+    const dObj = divisions.find(d => d.id === divId);
+    divName = dObj?.name || 'Divisi Riayah & Sarpras';
+    divCode = dObj?.code || 'RIAYAH';
+  } else if (r.division) {
+    const cleanD = r.division.toLowerCase();
+    const dObj = divisions.find(d => d.name.toLowerCase() === cleanD || d.id.toLowerCase() === cleanD || (d.code && d.code.toLowerCase() === cleanD));
+    if (dObj) {
+      divId = dObj.id;
+      divName = dObj.name;
+      divCode = dObj.code || 'RIAYAH';
+    }
+  } else if (matchRoom && matchRoom.divisionId) {
+    const dObj = divisions.find(d => d.id === matchRoom.divisionId);
+    if (dObj) {
+      divId = dObj.id;
+      divName = dObj.name;
+      divCode = dObj.code || 'RIAYAH';
+    }
+  }
+
+  // Branch Matcher
+  let branchId = null;
+  let branchName = null;
+
+  if (!isAdmin && user && user.role === 'wilayah' && user.scopeId) {
+    branchId = user.scopeId;
+    branchName = user.scopeName || 'Munzalan Cabang';
+  } else if (isAdmin && targetBranchFromModal) {
+    branchId = targetBranchFromModal;
+    const bObj = branches.find(b => b.id === branchId);
+    branchName = bObj?.name || 'Munzalan Cabang';
+  } else if (r.branch) {
+    const cleanB = r.branch.toLowerCase();
+    const bObj = branches.find(b => b.name.toLowerCase() === cleanB || b.id.toLowerCase() === cleanB || (b.code && b.code.toLowerCase() === cleanB));
+    if (bObj) {
+      branchId = bObj.id;
+      branchName = bObj.name;
+    }
+  } else if (matchRoom && matchRoom.branchId) {
+    const bObj = branches.find(b => b.id === matchRoom.branchId);
+    if (bObj) {
+      branchId = bObj.id;
+      branchName = bObj.name;
+    }
+  }
+
+  // Short Tag
+  let divShortTag = 'RYH';
+  if (divCode === 'RIAYAH') divShortTag = 'RYH';
+  else if (divCode === 'PONDOK') divShortTag = 'PDK';
+  else if (divCode === 'SEKRET') divShortTag = 'SKR';
+  else if (divCode) divShortTag = divCode.substring(0, 3).toUpperCase();
+
+  const prodYear = parseInt(r.year) || new Date().getFullYear();
+  const dateYear = r.date && r.date.length >= 4 ? r.date.substring(0, 4) : prodYear;
+
+  // No Induk
+  let noInduk = r.noInduk;
+  if (!noInduk || String(noInduk).trim() === '' || String(noInduk).trim() === '-') {
+    noInduk = `${String(seqNum).padStart(3, '0')}/INV-${divShortTag}/${dateYear}`;
+  }
+
+  // Asset Code
+  let code = r.codeOrCat && r.codeOrCat.length > 5 ? r.codeOrCat : '';
+  if (!code) {
+    const catPrefix = matchCat?.code || 'ELE';
+    const roomPrefix = matchRoom?.code || 'RUT';
+    let candidateCode = `${divShortTag}-${catPrefix}-${roomPrefix}-${dateYear}-${String(seqNum).padStart(3, '0')}`;
+    let attempt = seqNum;
+    while (existingCodes.has(candidateCode)) {
+      attempt++;
+      candidateCode = `${divShortTag}-${catPrefix}-${roomPrefix}-${dateYear}-${String(attempt).padStart(3, '0')}`;
+    }
+    code = candidateCode;
+  }
+  existingCodes.add(code);
+
+  const finalUnitPrice = r.unitPrice || r.totalPrice || 0;
+  const finalTotalPrice = r.totalPrice || (finalUnitPrice * (r.qty || 1)) || 0;
+  const finalDate = r.date || `${prodYear}-01-01`;
+
+  const newAsset = {
+    id: `AST-${Date.now()}-${Math.floor(Math.random()*1000)}-${seqNum}`,
+    noInduk: String(noInduk),
+    code: String(code),
+    name: String(name),
+    namaBarang: String(name),
+    categoryId: matchCat ? matchCat.id : 'CAT-ELE',
+    categoryName: matchCat ? matchCat.name : 'Elektronik',
+    categoryCode: matchCat ? matchCat.code : 'ELE',
+    roomId: matchRoom ? matchRoom.id : 'RM-KNTR',
+    roomName: matchRoom ? matchRoom.name : 'Kantor Sekretariat',
+    roomCode: matchRoom ? matchRoom.code : 'KNTR',
+    divisionId: divId,
+    divisionName: divName,
+    divisionCode: divCode,
+    branchId: branchId || undefined,
+    branchName: branchName || undefined,
+    brand: r.brand || '-',
+    brandType: r.brand || '-',
+    size: r.size || '-',
+    ukuran: r.size || '-',
+    material: r.material || '-',
+    bahan: r.material || '-',
+    productionYear: prodYear,
+    tahunPembuatan: prodYear,
+    source: r.source || 'Anggaran Pondok',
+    asalBarang: r.source || 'Anggaran Pondok',
+    documents: r.doc || 'Lengkap',
+    kelengkapanDokumen: r.doc || 'Lengkap',
+    qty: r.qty || 1,
+    jumlahBarang: r.qty || 1,
+    unit: r.unit || 'Unit',
+    satuan: r.unit || 'Unit',
+    condition: r.condition || 'Baik',
+    kondisi: r.condition || 'Baik',
+    unitPrice: finalUnitPrice,
+    hargaSatuan: finalUnitPrice,
+    price: finalTotalPrice,
+    hargaJumlah: finalTotalPrice,
+    date: finalDate,
+    tanggalDiterima: finalDate,
+    lifespan: matchCat?.lifespan || 5,
+    status: 'Aktif',
+    pic: r.pic || divName,
+    usedBy: matchRoom ? matchRoom.name : '',
+    dipergunakanOleh: matchRoom ? matchRoom.name : '',
+    serial: r.serial || '-',
+    serialNumber: r.serial || '-',
+    notes: r.notes || '',
+    keterangan: r.notes || '',
+    image: ''
+  };
+
+  db.saveAsset(newAsset);
 }
 
 /**
