@@ -86,352 +86,14 @@ const DEFAULT_CATEGORIES = [
   { id: 'CAT-LNN', code: 'LNN', name: 'Lain-lain', lifespan: 5, description: 'Barang yang tidak masuk kategori di atas' }
 ];
 
-// Initial Sample Assets
-const DEFAULT_ASSETS = [
-  {
-    id: 'ELE-KNTR-2024-001',
-    date: '2024-02-15',
-    tanggalDiterima: '2024-02-15',
-    noInduk: '001/INV/2024',
-    code: 'ELE-KNTR-2024-001',
-    kodeBarang: 'ELE-KNTR-2024-001',
-    name: 'PC All-in-One Core i5 16GB',
-    namaBarang: 'PC All-in-One Core i5 16GB',
-    brandType: 'Lenovo IdeaCentre AIO 3',
-    merkType: 'Lenovo IdeaCentre AIO 3',
-    brand: 'Lenovo IdeaCentre',
-    size: '23.8 Inci',
-    ukuran: '23.8 Inci',
-    material: 'Plastik & Logam',
-    bahan: 'Plastik & Logam',
-    productionYear: 2023,
-    tahunPembuatan: 2023,
-    source: 'Dana Wakaf Produktif 2024',
-    asalBarang: 'Dana Wakaf Produktif 2024',
-    documents: 'Kuitansi & BAST Resmi',
-    kelengkapanDokumen: 'Kuitansi & BAST Resmi',
-    qty: 1,
-    jumlahBarang: 1,
-    unit: 'Unit',
-    satuan: 'Unit',
-    condition: 'B',
-    kondisi: 'B',
-    unitPrice: 11500000,
-    hargaSatuan: 11500000,
-    price: 11500000,
-    hargaJumlah: 11500000,
-    notes: 'Unit komputer operasional sekretariat & database aset',
-    keterangan: 'Unit komputer operasional sekretariat & database aset',
-    roomId: 'RM-KNTR',
-    roomName: 'Kantor Sekretariat',
-    roomCode: 'KNTR',
-    categoryId: 'CAT-ELE',
-    categoryName: 'Elektronik',
-    categoryCode: 'ELE',
-    status: 'Aktif',
-    lifespan: 5
-  },
-  {
-    id: 'ELE-AULA-2024-001',
-    date: '2024-03-10',
-    tanggalDiterima: '2024-03-10',
-    noInduk: '002/INV/2024',
-    code: 'ELE-AULA-2024-001',
-    kodeBarang: 'ELE-AULA-2024-001',
-    name: 'Proyektor Laser Full HD 4000 Lumens',
-    namaBarang: 'Proyektor Laser Full HD 4000 Lumens',
-    brandType: 'Epson EB-FH52',
-    merkType: 'Epson EB-FH52',
-    brand: 'Epson',
-    size: 'Full HD 1080p',
-    ukuran: 'Full HD 1080p',
-    material: 'Plastik ABS',
-    bahan: 'Plastik ABS',
-    productionYear: 2024,
-    tahunPembuatan: 2024,
-    source: 'Kas Riayah Munzalan',
-    asalBarang: 'Kas Riayah Munzalan',
-    documents: 'Faktur Resmi & Kartu Garansi',
-    kelengkapanDokumen: 'Faktur Resmi & Kartu Garansi',
-    qty: 1,
-    jumlahBarang: 1,
-    unit: 'Unit',
-    satuan: 'Unit',
-    condition: 'B',
-    kondisi: 'B',
-    unitPrice: 14800000,
-    hargaSatuan: 14800000,
-    price: 14800000,
-    hargaJumlah: 14800000,
-    notes: 'Proyektor utama panggung aula tabligh akbar & kajian santri',
-    keterangan: 'Proyektor utama panggung aula tabligh akbar & kajian santri',
-    roomId: 'RM-AULA',
-    roomName: 'Aula / Ruang Serbaguna',
-    roomCode: 'AULA',
-    categoryId: 'CAT-ELE',
-    categoryName: 'Elektronik',
-    categoryCode: 'ELE',
-    status: 'Aktif',
-    lifespan: 5
-  },
-  {
-    id: 'PRB-KNTR-2023-001',
-    date: '2023-01-12',
-    tanggalDiterima: '2023-01-12',
-    noInduk: '003/INV/2023',
-    code: 'PRB-KNTR-2023-001',
-    kodeBarang: 'PRB-KNTR-2023-001',
-    name: 'Meja Rapat Kayu Jati 10 Kursi',
-    namaBarang: 'Meja Rapat Kayu Jati 10 Kursi',
-    brandType: 'Custom Jepara Solid Teak',
-    merkType: 'Custom Jepara Solid Teak',
-    brand: 'Custom Jepara',
-    size: '300 x 120 cm',
-    ukuran: '300 x 120 cm',
-    material: 'Kayu Jati Solid Grade A',
-    bahan: 'Kayu Jati Solid Grade A',
-    productionYear: 2022,
-    tahunPembuatan: 2022,
-    source: 'Wakaf Pengusaha Pontianak',
-    asalBarang: 'Wakaf Pengusaha Pontianak',
-    documents: 'Akta Ikrar Wakaf Barang',
-    kelengkapanDokumen: 'Akta Ikrar Wakaf Barang',
-    qty: 1,
-    jumlahBarang: 1,
-    unit: 'Set',
-    satuan: 'Set',
-    condition: 'B',
-    kondisi: 'B',
-    unitPrice: 18500000,
-    hargaSatuan: 18500000,
-    price: 18500000,
-    hargaJumlah: 18500000,
-    notes: 'Meja musyawarah pengurus & dewan pimpinan munzalan',
-    keterangan: 'Meja musyawarah pengurus & dewan pimpinan munzalan',
-    roomId: 'RM-KNTR',
-    roomName: 'Kantor Sekretariat',
-    roomCode: 'KNTR',
-    categoryId: 'CAT-PRB',
-    categoryName: 'Perabot / Mebelair',
-    categoryCode: 'PRB',
-    status: 'Aktif',
-    lifespan: 8
-  },
-  {
-    id: 'AGN-PKRN-2022-001',
-    date: '2022-05-18',
-    tanggalDiterima: '2022-05-18',
-    noInduk: '004/INV/2022',
-    code: 'AGN-PKRN-2022-001',
-    kodeBarang: 'AGN-PKRN-2022-001',
-    name: 'Mesin Genset Silent Diesel 10 kVA',
-    namaBarang: 'Mesin Genset Silent Diesel 10 kVA',
-    brandType: 'Yanmar Silent Diesel 10kVA',
-    merkType: 'Yanmar Silent Diesel 10kVA',
-    brand: 'Yanmar',
-    size: '10 kVA / 8000 Watt',
-    ukuran: '10 kVA / 8000 Watt',
-    material: 'Baja Enclosure Silent',
-    bahan: 'Baja Enclosure Silent',
-    productionYear: 2022,
-    tahunPembuatan: 2022,
-    source: 'Pengadaan Sarpras Munzalan',
-    asalBarang: 'Pengadaan Sarpras Munzalan',
-    documents: 'Faktur & Buku Garansi Mesin',
-    kelengkapanDokumen: 'Faktur & Buku Garansi Mesin',
-    qty: 1,
-    jumlahBarang: 1,
-    unit: 'Unit',
-    satuan: 'Unit',
-    condition: 'B',
-    kondisi: 'B',
-    unitPrice: 42000000,
-    hargaSatuan: 42000000,
-    price: 42000000,
-    hargaJumlah: 42000000,
-    notes: 'Cadangan darurat listrik masjid utama & asrama santri',
-    keterangan: 'Cadangan darurat listrik masjid utama & asrama santri',
-    roomId: 'RM-PKRN',
-    roomName: 'Pekarangan / Halaman',
-    roomCode: 'PKRN',
-    categoryId: 'CAT-AGN',
-    categoryName: 'Alat Bangunan',
-    categoryCode: 'AGN',
-    status: 'Aktif',
-    lifespan: 7
-  }
-];
+// Initial Sample Records (Kosongan secara default untuk sistem murni)
+const DEFAULT_ASSETS = [];
+const DEFAULT_DISPOSALS = [];
+const DEFAULT_LENDINGS = [];
+const DEFAULT_BAST = [];
+const DEFAULT_DAMAGE_REPORTS = [];
+const DEFAULT_MUTATIONS = [];
 
-// Initial Sample Disposals (Log Pemutihan)
-const DEFAULT_DISPOSALS = [
-  {
-    id: 'DSP-001',
-    assetCode: 'AST-2019-ELK-099',
-    assetName: 'Printer Dot Matrix LX-310 (Lama)',
-    roomName: 'Ruang Tata Usaha',
-    date: '2025-11-20',
-    price: 2800000,
-    reason: 'Rusak Berat / Rusak Total',
-    docNo: 'BA.01/DISP/SMAN1/XI/2025',
-    notes: 'Mainboard terbakar dan jarum cetak patah'
-  }
-];
-
-// Initial Sample Lendings
-const DEFAULT_LENDINGS = [
-  {
-    id: 'LND-001',
-    assetId: 'AST-2024-ELK-002',
-    assetCode: 'AST-2024-ELK-002',
-    assetName: 'Proyektor Laser Full HD 4000 Lumens',
-    borrower: 'Panitia LDKS Siswa (Hendra)',
-    date: '2026-08-28',
-    returnDate: '2026-09-02',
-    status: 'Dipinjam',
-    purpose: 'Presentasi materi kepemimpinan OSIS di Ruang Multimedia'
-  }
-];
-
-// Initial Sample BAST & Pemegang Aset
-const DEFAULT_BAST = [
-  {
-    id: 'BAST-2026-001',
-    docNo: 'BAST/RIAYAH/2026/001',
-    recipientName: 'Ust. Hendra Gunawan, S.Pd.',
-    stambuk: 'STB-2021-089',
-    amanah: 'Koordinator Penyaluran Beras & Logistik Riayah',
-    region: 'Munzalan Pusat (Kubu Raya / Pontianak)',
-    isPusat: true,
-    phone: '0813-4567-8901',
-    date: '2026-01-15',
-    assetId: 'AST-2022-MSN-005',
-    assetCode: 'AST-2022-MSN-005',
-    assetName: 'Mesin Genset Silent Diesel 10 kVA',
-    assetCategory: 'Mesin & Peralatan Kantor',
-    assetSerial: 'GS-2022-DSL-9921',
-    accessories: 'Kunci Kontak (2 set), Manual Book, Kabel Output Power 50m, Toolkit Servis',
-    condition: 'Sangat Baik / Mulus & Terawat',
-    commitmentClause: 'Sanggup menjaga, merawat, dan mengelola aset amanah dakwah ini dengan penuh tanggung jawab, tidak memindahtangankan tanpa izin tertulis, serta siap mengembalikan saat purna tugas.',
-    status: 'Aktif',
-    notes: 'Diserahkan langsung di Kantor Riayah Pusat untuk operasional penunjang dakwah.'
-  },
-  {
-    id: 'BAST-2026-002',
-    docNo: 'BAST/RIAYAH/2026/002',
-    recipientName: 'Rahmat Hidayatullah',
-    stambuk: 'STB-2023-142',
-    amanah: 'Tim Creative Media & Publikasi Dakwah',
-    region: 'Munzalan Cabang Sambas',
-    isPusat: false,
-    phone: '0852-9988-7766',
-    date: '2026-02-10',
-    assetId: 'AST-2024-ELK-001',
-    assetCode: 'AST-2024-ELK-001',
-    assetName: 'PC All-in-One Core i5 16GB',
-    assetCategory: 'Elektronik & Komputer',
-    assetSerial: 'AIO-883921-2024',
-    accessories: 'Unit PC All-in-One, Keyboard & Mouse Wireless, Adaptor Power Original, Box',
-    condition: 'Baik Normal',
-    commitmentClause: 'Sanggup menjaga, merawat, dan mengelola aset amanah dakwah ini dengan penuh tanggung jawab, tidak memindahtangankan tanpa izin tertulis, serta siap mengembalikan saat purna tugas.',
-    status: 'Aktif',
-    notes: 'Penyerahan aset operasional pembuatan konten video & siaran dakwah daerah.'
-  }
-];
-
-// Initial Sample Berita Acara Kerusakan / Pemeriksaan Fisik Barang Rusak
-const DEFAULT_DAMAGE_REPORTS = [
-  {
-    id: 'BA-RSK-2026-001',
-    docNo: 'BA.01/RSK-SARPRAS/2026',
-    assetId: 'AST-2024-ELK-002',
-    assetCode: 'AST-2024-ELK-002',
-    assetName: 'Proyektor Laser Full HD 4000 Lumens',
-    categoryName: 'Elektronik',
-    roomName: 'Aula / Ruang Serbaguna',
-    date: '2026-03-01',
-    inspectorName: 'Ust. Syahril & Teknisi Proyektor',
-    inspectorTitle: 'Tim Verifikasi Sarpras',
-    severity: 'Rusak Berat',
-    damageDescription: 'Lampu laser proyektor mati total dan optik dalam mengalami panas berlebih (overheat). Biaya penggantian optik tidak ekonomis dibanding pengadaan unit baru.',
-    recommendation: 'Usulkan Penghapusan (Pemutihan Aset)',
-    status: 'Menunggu Usulan Penghapusan',
-    photos: [],
-    suratDoc: null,
-    createdAt: '2026-03-01T10:00:00.000Z'
-  }
-];
-
-// Initial Sample Mutasi & Pemindahan Aset
-const DEFAULT_MUTATIONS = [
-  {
-    id: 'MUT-2026-001',
-    docNo: 'BA-MUT/MKMM/2026/08/001',
-    date: '2026-08-15',
-    assetId: 'AST-2024-ELK-001',
-    assetCode: 'AST-2024-ELK-001',
-    assetName: 'PC All-in-One Core i5 16GB',
-    categoryName: 'Elektronik & Komputer',
-    brandType: 'HP Pavilion 24',
-    qty: 1,
-    unit: 'Unit',
-    fromBranchId: 'BR-001',
-    fromBranchName: 'Munzalan Pusat (Kubu Raya / Pontianak)',
-    fromDivisionId: 'DIV-001',
-    fromDivisionName: 'Divisi Riayah & Sarpras',
-    fromRoomId: 'RM-001',
-    fromRoomName: 'Ruang Sekretariat Utama',
-    fromPj: 'Ust. Hendra Gunawan',
-    fromPjNip: '19880112-2020-01',
-    toBranchId: 'BR-002',
-    toBranchName: 'Munzalan Cabang Sambas',
-    toDivisionId: 'DIV-001',
-    toDivisionName: 'Divisi Riayah & Sarpras',
-    toRoomId: 'RM-004',
-    toRoomName: 'Ruang Operasional Cabang',
-    toPj: 'Rahmat Hidayatullah',
-    toPjNip: '19950320-2023-04',
-    reason: 'Pemindahan unit PC untuk mendukung operasional dakwah dan administrasi kantor Cabang Sambas.',
-    condition: 'Baik',
-    notes: 'Disertai keyboard mouse wireless dan kabel power asli.',
-    operator: 'Administrator',
-    status: 'Selesai',
-    createdAt: '2026-08-15T09:30:00.000Z'
-  },
-  {
-    id: 'MUT-2026-002',
-    docNo: 'BA-MUT/MKMM/2026/09/002',
-    date: '2026-09-02',
-    assetId: 'AST-2024-ELK-002',
-    assetCode: 'AST-2024-ELK-002',
-    assetName: 'Proyektor Laser Full HD 4000 Lumens',
-    categoryName: 'Elektronik & Komputer',
-    brandType: 'Epson EB-L200F',
-    qty: 1,
-    unit: 'Unit',
-    fromBranchId: 'BR-001',
-    fromBranchName: 'Munzalan Pusat (Kubu Raya / Pontianak)',
-    fromDivisionId: 'DIV-001',
-    fromDivisionName: 'Divisi Riayah & Sarpras',
-    fromRoomId: 'RM-002',
-    fromRoomName: 'Gudang Sarpras & Perlengkapan',
-    fromPj: 'Marbot Ridwan',
-    fromPjNip: '-',
-    toBranchId: 'BR-001',
-    toBranchName: 'Munzalan Pusat (Kubu Raya / Pontianak)',
-    toDivisionId: 'DIV-002',
-    toDivisionName: 'Pondok & Pendidikan Santri',
-    toRoomId: 'RM-003',
-    toRoomName: 'Aula Serbaguna Utama',
-    toPj: 'Ust. Ahmad Fauzi, S.Pd.I',
-    toPjNip: '19900814-2021-02',
-    reason: 'Pemasangan proyektor permanen di Aula Serbaguna untuk pembelajaran santri & kajian rutin.',
-    condition: 'Baik',
-    notes: 'Termasuk bracket gantung dan remote control.',
-    operator: 'Administrator',
-    status: 'Selesai',
-    createdAt: '2026-09-02T14:15:00.000Z'
-  }
-];
 
 // Master Kategori Standar Barang Habis Pakai (BHP / Non-Aset)
 const DEFAULT_BHP_CATEGORIES = [
@@ -753,6 +415,16 @@ class AssetDatabase {
 
     if (!localStorage.getItem(STORAGE_KEYS.ASSETS)) {
       this.save(STORAGE_KEYS.ASSETS, DEFAULT_ASSETS);
+    } else {
+      // Auto-purge initial seed demo mock assets if present from older test sessions
+      try {
+        const demoIds = ['ELE-KNTR-2024-001', 'ELE-AULA-2024-001', 'PRB-KNTR-2023-001', 'AGN-PKRN-2022-001'];
+        let curAssets = this.get(STORAGE_KEYS.ASSETS);
+        if (curAssets && Array.isArray(curAssets) && curAssets.some(a => demoIds.includes(a.id) || demoIds.includes(a.code))) {
+          const cleaned = curAssets.filter(a => !demoIds.includes(a.id) && !demoIds.includes(a.code));
+          this.save(STORAGE_KEYS.ASSETS, cleaned);
+        }
+      } catch (e) {}
     }
 
     // Auto-backfill division metadata onto assets if missing
@@ -770,11 +442,6 @@ class AssetDatabase {
               const dObj = divisions.find(d => d.id === rm.divisionId);
               a.divisionName = rm.divisionName || dObj?.name || 'Divisi Riayah & Sarpras';
               a.divisionCode = dObj?.code || 'RIAYAH';
-              updated = true;
-            } else {
-              a.divisionId = 'DIV-001';
-              a.divisionName = 'Divisi Riayah & Sarpras';
-              a.divisionCode = 'RIAYAH';
               updated = true;
             }
           }

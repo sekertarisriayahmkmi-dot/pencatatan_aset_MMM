@@ -1813,8 +1813,10 @@ function onSelectBranchInBAST(selectElem) {
  * ========================================================
  */
 function renderDashboard() {
-  let assets = db.getAssets();
-  let rooms = db.getRooms();
+  let rawAssets = db.getAssets();
+  let rawRooms = db.getRooms();
+  let assets = (typeof AuthEngine !== 'undefined') ? AuthEngine.filterAssets(rawAssets) : rawAssets;
+  let rooms = (typeof AuthEngine !== 'undefined') ? AuthEngine.filterRooms(rawRooms) : rawRooms;
   const categories = db.getCategories();
   const disposals = db.getDisposals();
   const settings = db.getSettings();
@@ -2062,8 +2064,8 @@ function clearModernSearch() {
 }
 
 function renderAssetTable(filteredAssets = null) {
-  const assets = filteredAssets !== null ? filteredAssets : db.getAssets();
-  const allAssets = db.getAssets();
+  const allScopedAssets = (typeof AuthEngine !== 'undefined') ? AuthEngine.filterAssets(db.getAssets()) : db.getAssets();
+  const assets = filteredAssets !== null ? filteredAssets : allScopedAssets;
   const settings = db.getSettings();
 
   const tbody = document.getElementById('asset-table-body');
@@ -2072,7 +2074,7 @@ function renderAssetTable(filteredAssets = null) {
   const totalDisplay = document.getElementById('asset-total-display');
 
   if (countDisplay) countDisplay.textContent = assets.length;
-  if (totalDisplay) totalDisplay.textContent = allAssets.length;
+  if (totalDisplay) totalDisplay.textContent = allScopedAssets.length;
 
   if (!tbody) return;
 
@@ -2225,8 +2227,8 @@ function applyAssetFilters() {
   const catFilter = document.getElementById('filter-kategori')?.value || '';
   const condFilter = document.getElementById('filter-kondisi')?.value || '';
 
-  const allAssets = db.getAssets();
-  const allRooms = db.getRooms();
+  const allAssets = (typeof AuthEngine !== 'undefined') ? AuthEngine.filterAssets(db.getAssets()) : db.getAssets();
+  const allRooms = (typeof AuthEngine !== 'undefined') ? AuthEngine.filterRooms(db.getRooms()) : db.getRooms();
 
   const filtered = allAssets.filter(a => {
     const matchQuery = !query || 
