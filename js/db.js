@@ -453,6 +453,31 @@ class AssetDatabase {
     } catch (e) {
       console.warn('Error migrating asset divisions', e);
     }
+
+    // Auto-clean any old dummy/sample records from previous testing
+    try {
+      const disposals = this.get(STORAGE_KEYS.DISPOSALS) || [];
+      const cleanDisposals = disposals.filter(d => 
+        !String(d.docNo || d.doc_no || '').includes('SMAN1') && 
+        !String(d.assetCode || d.asset_code || '').includes('AST-2019-ELK-099') && 
+        !String(d.assetName || d.asset_name || '').includes('Printer Dot Matrix LX-310')
+      );
+      if (cleanDisposals.length !== disposals.length) {
+        this.save(STORAGE_KEYS.DISPOSALS, cleanDisposals);
+      }
+
+      const dispReqs = this.get(STORAGE_KEYS.DISPOSAL_REQUESTS) || [];
+      const cleanDispReqs = dispReqs.filter(d => 
+        !String(d.assetCode || d.asset_code || '').includes('AST-2019-ELK-099') && 
+        !String(d.assetName || d.asset_name || '').includes('Printer Dot Matrix LX-310')
+      );
+      if (cleanDispReqs.length !== dispReqs.length) {
+        this.save(STORAGE_KEYS.DISPOSAL_REQUESTS, cleanDispReqs);
+      }
+    } catch (e) {
+      console.warn('Error auto-cleaning dummy records', e);
+    }
+
     if (!localStorage.getItem(STORAGE_KEYS.DISPOSALS)) {
       this.save(STORAGE_KEYS.DISPOSALS, DEFAULT_DISPOSALS);
     }

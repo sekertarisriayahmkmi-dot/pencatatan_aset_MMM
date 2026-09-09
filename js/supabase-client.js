@@ -229,14 +229,187 @@ const SupabaseEngine = {
         totalRecords += rows.length;
       }
 
-      // 6. Settings
+      // 6. BAST
+      const bastList = db.getBASTList ? db.getBASTList() : [];
+      if (bastList.length > 0) {
+        const rows = bastList.map(b => ({
+          id: b.id,
+          doc_no: b.docNo || b.noBa || b.id,
+          date: b.date || b.tanggal || new Date().toISOString().split('T')[0],
+          recipient_name: b.recipientName || b.namaPenerima || '-',
+          stambuk: b.stambuk || '',
+          amanah: b.amanah || '',
+          institution: b.institution || '',
+          phone: b.phone || '',
+          is_pusat: !!b.isPusat,
+          status: b.status || 'Aktif',
+          asset_id: b.assetId || null,
+          asset_code: b.assetCode || '',
+          asset_name: b.assetName || '',
+          officer_name: b.officerName || '',
+          witness_name: b.witnessName || '',
+          notes: b.notes || ''
+        }));
+        await c.from('bast').upsert(rows, { onConflict: 'id' });
+        totalRecords += rows.length;
+      }
+
+      // 7. Mutations
+      const mutations = db.getMutations ? db.getMutations() : [];
+      if (mutations.length > 0) {
+        const rows = mutations.map(m => ({
+          id: m.id,
+          doc_no: m.docNo || m.noMutasi || m.id,
+          date: m.date || new Date().toISOString().split('T')[0],
+          asset_id: m.assetId || null,
+          asset_code: m.assetCode || '',
+          asset_name: m.assetName || '',
+          qty: parseInt(m.qty) || 1,
+          from_room_id: m.fromRoomId || null,
+          from_room_name: m.fromRoomName || '',
+          to_room_id: m.toRoomId || null,
+          to_room_name: m.toRoomName || '',
+          from_division_id: m.fromDivisionId || null,
+          from_division_name: m.fromDivisionName || '',
+          to_division_id: m.toDivisionId || null,
+          to_division_name: m.toDivisionName || '',
+          from_branch_id: m.fromBranchId || null,
+          from_branch_name: m.fromBranchName || '',
+          to_branch_id: m.toBranchId || null,
+          to_branch_name: m.toBranchName || '',
+          reason: m.reason || '',
+          officer_name: m.officerName || '',
+          recipient_name: m.recipientName || ''
+        }));
+        await c.from('mutations').upsert(rows, { onConflict: 'id' });
+        totalRecords += rows.length;
+      }
+
+      // 8. Damage Reports
+      const damageReports = db.getDamageReports ? db.getDamageReports() : [];
+      if (damageReports.length > 0) {
+        const rows = damageReports.map(d => ({
+          id: d.id,
+          doc_no: d.docNo || d.id,
+          date: d.date || new Date().toISOString().split('T')[0],
+          asset_id: d.assetId || null,
+          asset_code: d.assetCode || '',
+          asset_name: d.assetName || '',
+          category_name: d.categoryName || '',
+          room_name: d.roomName || '',
+          damage_type: d.damageType || '',
+          severity: d.severity || 'Rusak Berat',
+          chronology: d.chronology || '',
+          recommendation: d.recommendation || '',
+          inspector_name: d.inspectorName || '',
+          status: d.status || 'BA Kerusakan Terbit',
+          repaired_at: d.repairedAt || null,
+          repair_notes: d.repairNotes || '',
+          photos: d.photos || []
+        }));
+        await c.from('damage_reports').upsert(rows, { onConflict: 'id' });
+        totalRecords += rows.length;
+      }
+
+      // 9. Disposal Requests
+      const disposalRequests = db.getDisposalRequests ? db.getDisposalRequests() : [];
+      if (disposalRequests.length > 0) {
+        const rows = disposalRequests.map(dr => ({
+          id: dr.id,
+          date: dr.date || new Date().toISOString().split('T')[0],
+          asset_id: dr.assetId || null,
+          asset_code: dr.assetCode || '',
+          asset_name: dr.assetName || '',
+          category_name: dr.categoryName || '',
+          room_name: dr.roomName || '',
+          price: parseFloat(dr.price) || 0,
+          book_value: parseFloat(dr.bookValue) || 0,
+          reason: dr.reason || '',
+          proposed_by: dr.proposedBy || '',
+          status: dr.status || 'Menunggu Persetujuan',
+          approval_data: dr.approvalData || null
+        }));
+        await c.from('disposal_requests').upsert(rows, { onConflict: 'id' });
+        totalRecords += rows.length;
+      }
+
+      // 10. Disposals
+      const disposals = db.getDisposals ? db.getDisposals() : [];
+      if (disposals.length > 0) {
+        const rows = disposals.map(d => ({
+          id: d.id,
+          request_id: d.requestId || null,
+          asset_id: d.assetId || null,
+          asset_code: d.assetCode || '',
+          asset_name: d.assetName || '',
+          category_name: d.categoryName || '',
+          room_name: d.roomName || '',
+          price: parseFloat(d.price) || 0,
+          book_value: parseFloat(d.bookValue) || 0,
+          date: d.date || new Date().toISOString().split('T')[0],
+          reason: d.reason || '',
+          doc_no: d.docNo || '',
+          notes: d.notes || '',
+          proposed_by: d.proposedBy || '',
+          approved_by: d.approvedBy || ''
+        }));
+        await c.from('disposals').upsert(rows, { onConflict: 'id' });
+        totalRecords += rows.length;
+      }
+
+      // 11. BHP & Transactions
+      const bhpItems = db.getBHP ? db.getBHP() : [];
+      if (bhpItems.length > 0) {
+        const rows = bhpItems.map(b => ({
+          id: b.id,
+          code: b.code,
+          name: b.name,
+          brand_type: b.brandType || '',
+          category_id: b.categoryId || null,
+          category_name: b.categoryName || '',
+          qty: parseInt(b.qty) || 0,
+          stock: parseInt(b.stock !== undefined ? b.stock : b.qty) || 0,
+          unit: b.unit || 'Pcs',
+          unit_price: parseFloat(b.unitPrice) || 0,
+          price: parseFloat(b.price) || 0,
+          room_id: b.roomId || null,
+          room_name: b.roomName || '',
+          notes: b.notes || ''
+        }));
+        await c.from('bhp').upsert(rows, { onConflict: 'id' });
+        totalRecords += rows.length;
+      }
+
+      const bhpTrans = db.getBHPTransactions ? db.getBHPTransactions() : [];
+      if (bhpTrans.length > 0) {
+        const rows = bhpTrans.map(t => ({
+          id: t.id,
+          date: t.date || new Date().toISOString().split('T')[0],
+          type: t.type || 'out',
+          bhp_id: t.bhpId || null,
+          bhp_code: t.bhpCode || '',
+          bhp_name: t.bhpName || '',
+          qty: parseInt(t.qty) || 1,
+          unit: t.unit || 'Pcs',
+          unit_price: parseFloat(t.unitPrice) || 0,
+          total_price: parseFloat(t.totalPrice) || 0,
+          recipient: t.recipient || '',
+          target_room: t.targetRoom || '',
+          notes: t.notes || '',
+          created_by: t.createdBy || ''
+        }));
+        await c.from('bhp_transactions').upsert(rows, { onConflict: 'id' });
+        totalRecords += rows.length;
+      }
+
+      // 12. Settings
       const settings = db.getSettings ? db.getSettings() : {};
       await c.from('app_settings').upsert({ id: 'main_settings', data: settings }, { onConflict: 'id' });
 
       return {
         success: true,
         count: totalRecords,
-        message: `Berhasil sinkronisasi ${totalRecords} data aset & master ke Supabase Cloud!`
+        message: `Berhasil sinkronisasi ${totalRecords} data (Aset, Penghapusan, BAST, Mutasi, BHP) ke Supabase Cloud!`
       };
     } catch (err) {
       console.error('Push error:', err);
@@ -360,6 +533,171 @@ const SupabaseEngine = {
           isUnderDisposalRequest: a.is_under_disposal_request
         }));
         db.save(STORAGE_KEYS.ASSETS, mapped);
+      }
+
+      // 6. Fetch Disposals & Disposal Requests
+      const { data: dbDisposals } = await c.from('disposals').select('*');
+      if (dbDisposals && dbDisposals.length > 0) {
+        const mapped = dbDisposals.map(d => ({
+          id: d.id,
+          requestId: d.request_id,
+          assetId: d.asset_id,
+          assetCode: d.asset_code,
+          assetName: d.asset_name,
+          categoryName: d.category_name,
+          roomName: d.room_name,
+          price: parseFloat(d.price) || 0,
+          bookValue: parseFloat(d.book_value) || 0,
+          date: d.date,
+          reason: d.reason,
+          docNo: d.doc_no,
+          notes: d.notes,
+          proposedBy: d.proposed_by,
+          approvedBy: d.approved_by
+        }));
+        db.save(STORAGE_KEYS.DISPOSALS, mapped);
+      }
+
+      const { data: dbDisposalRequests } = await c.from('disposal_requests').select('*');
+      if (dbDisposalRequests && dbDisposalRequests.length > 0) {
+        const mapped = dbDisposalRequests.map(dr => ({
+          id: dr.id,
+          date: dr.date,
+          assetId: dr.asset_id,
+          assetCode: dr.asset_code,
+          assetName: dr.asset_name,
+          categoryName: dr.category_name,
+          roomName: dr.room_name,
+          price: parseFloat(dr.price) || 0,
+          bookValue: parseFloat(dr.book_value) || 0,
+          reason: dr.reason,
+          proposedBy: dr.proposed_by,
+          status: dr.status,
+          approvalData: dr.approval_data
+        }));
+        db.save(STORAGE_KEYS.DISPOSAL_REQUESTS, mapped);
+      }
+
+      // 7. Fetch BAST
+      const { data: dbBAST } = await c.from('bast').select('*');
+      if (dbBAST && dbBAST.length > 0) {
+        const mapped = dbBAST.map(b => ({
+          id: b.id,
+          docNo: b.doc_no,
+          date: b.date,
+          recipientName: b.recipient_name,
+          stambuk: b.stambuk,
+          amanah: b.amanah,
+          institution: b.institution,
+          phone: b.phone,
+          isPusat: b.is_pusat,
+          status: b.status,
+          assetId: b.asset_id,
+          assetCode: b.asset_code,
+          assetName: b.asset_name,
+          officerName: b.officer_name,
+          witnessName: b.witness_name,
+          notes: b.notes
+        }));
+        db.save(STORAGE_KEYS.BAST, mapped);
+      }
+
+      // 8. Fetch Mutations
+      const { data: dbMutations } = await c.from('mutations').select('*');
+      if (dbMutations && dbMutations.length > 0) {
+        const mapped = dbMutations.map(m => ({
+          id: m.id,
+          docNo: m.doc_no,
+          date: m.date,
+          assetId: m.asset_id,
+          assetCode: m.asset_code,
+          assetName: m.asset_name,
+          qty: m.qty,
+          fromRoomId: m.from_room_id,
+          fromRoomName: m.from_room_name,
+          toRoomId: m.to_room_id,
+          toRoomName: m.to_room_name,
+          fromDivisionId: m.from_division_id,
+          fromDivisionName: m.from_division_name,
+          toDivisionId: m.to_division_id,
+          toDivisionName: m.to_division_name,
+          fromBranchId: m.from_branch_id,
+          fromBranchName: m.from_branch_name,
+          toBranchId: m.to_branch_id,
+          toBranchName: m.to_branch_name,
+          reason: m.reason,
+          officerName: m.officer_name,
+          recipientName: m.recipient_name
+        }));
+        db.save(STORAGE_KEYS.MUTATIONS, mapped);
+      }
+
+      // 9. Fetch Damage Reports
+      const { data: dbDamage } = await c.from('damage_reports').select('*');
+      if (dbDamage && dbDamage.length > 0) {
+        const mapped = dbDamage.map(d => ({
+          id: d.id,
+          docNo: d.doc_no,
+          date: d.date,
+          assetId: d.asset_id,
+          assetCode: d.asset_code,
+          assetName: d.asset_name,
+          categoryName: d.category_name,
+          roomName: d.room_name,
+          damageType: d.damage_type,
+          severity: d.severity,
+          chronology: d.chronology,
+          recommendation: d.recommendation,
+          inspectorName: d.inspector_name,
+          status: d.status,
+          repairedAt: d.repaired_at,
+          repairNotes: d.repair_notes,
+          photos: d.photos
+        }));
+        db.save(STORAGE_KEYS.DAMAGE_REPORTS, mapped);
+      }
+
+      // 10. Fetch BHP
+      const { data: dbBhp } = await c.from('bhp').select('*');
+      if (dbBhp && dbBhp.length > 0) {
+        const mapped = dbBhp.map(b => ({
+          id: b.id,
+          code: b.code,
+          name: b.name,
+          brandType: b.brand_type,
+          categoryId: b.category_id,
+          categoryName: b.category_name,
+          qty: b.qty,
+          stock: b.stock,
+          unit: b.unit,
+          unitPrice: parseFloat(b.unit_price) || 0,
+          price: parseFloat(b.price) || 0,
+          roomId: b.room_id,
+          roomName: b.room_name,
+          notes: b.notes
+        }));
+        db.save(STORAGE_KEYS.BHP, mapped);
+      }
+
+      const { data: dbBhpTrans } = await c.from('bhp_transactions').select('*');
+      if (dbBhpTrans && dbBhpTrans.length > 0) {
+        const mapped = dbBhpTrans.map(t => ({
+          id: t.id,
+          date: t.date,
+          type: t.type,
+          bhpId: t.bhp_id,
+          bhpCode: t.bhp_code,
+          bhpName: t.bhp_name,
+          qty: t.qty,
+          unit: t.unit,
+          unitPrice: parseFloat(t.unit_price) || 0,
+          totalPrice: parseFloat(t.total_price) || 0,
+          recipient: t.recipient,
+          targetRoom: t.target_room,
+          notes: t.notes,
+          createdBy: t.created_by
+        }));
+        db.save(STORAGE_KEYS.BHP_TRANSACTIONS, mapped);
       }
 
       // 6. Fetch Settings
