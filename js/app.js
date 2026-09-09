@@ -8743,18 +8743,31 @@ function openModalTambahRuangan(roomId = null) {
   const nameInput = document.getElementById('form-room-name');
   const floorInput = document.getElementById('form-room-floor');
   const branchSelect = document.getElementById('form-room-branch');
+  const branchBadge = document.getElementById('form-room-branch-badge');
   const divSelect = document.getElementById('form-room-division');
+  const divBadge = document.getElementById('form-room-division-badge');
   const pjInput = document.getElementById('form-room-pj');
   const nipInput = document.getElementById('form-room-nip');
+
+  const user = (typeof AuthEngine !== 'undefined') ? AuthEngine.getCurrentUser() : null;
+  const isAdmin = (typeof AuthEngine !== 'undefined') && AuthEngine.isAdmin();
+  const isDivisi = (typeof AuthEngine !== 'undefined') && AuthEngine.isDivisi();
+  const isWilayah = (typeof AuthEngine !== 'undefined') && AuthEngine.isWilayah();
 
   // Populate Branch dropdown
   const branches = db.getBranches();
   if (branchSelect) {
     branchSelect.innerHTML = branches.map(b => `<option value="${b.id}">${b.isPusat ? '🏢' : '📍'} ${b.name}</option>`).join('');
-    // Auto-select user's branch if user is wilayah
-    if (typeof AuthEngine !== 'undefined' && AuthEngine.isWilayah()) {
-      const u = AuthEngine.getCurrentUser();
-      if (u?.scopeId) branchSelect.value = u.scopeId;
+    // Auto-lock user's branch if user is wilayah
+    if (isWilayah && user?.scopeId) {
+      branchSelect.value = user.scopeId;
+      branchSelect.disabled = true;
+      branchSelect.classList.add('bg-slate-100', 'dark:bg-slate-800', 'cursor-not-allowed', 'opacity-80');
+      if (branchBadge) branchBadge.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-emerald-500 font-bold"><i data-lucide="lock" class="w-3 h-3"></i> [${user.scopeName || 'Cabang'}]</span>`;
+    } else {
+      branchSelect.disabled = false;
+      branchSelect.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'cursor-not-allowed', 'opacity-80');
+      if (branchBadge) branchBadge.innerHTML = `<span class="text-[10px] text-slate-400">Pilih wilayah cabang</span>`;
     }
   }
 
@@ -8764,10 +8777,16 @@ function openModalTambahRuangan(roomId = null) {
   if (divSelect) {
     divSelect.innerHTML = `<option value="">🏛️ Standar Lembaga (${settings.instansiName || 'Munzalan'})</option>` +
       divisions.map(d => `<option value="${d.id}">🏢 ${d.name} (${d.code || 'DIV'})</option>`).join('');
-    // Auto-select user's division if user is divisi
-    if (typeof AuthEngine !== 'undefined' && AuthEngine.isDivisi()) {
-      const u = AuthEngine.getCurrentUser();
-      if (u?.scopeId) divSelect.value = u.scopeId;
+    // Auto-lock user's division if user is divisi
+    if (isDivisi && user?.scopeId) {
+      divSelect.value = user.scopeId;
+      divSelect.disabled = true;
+      divSelect.classList.add('bg-slate-100', 'dark:bg-slate-800', 'cursor-not-allowed', 'opacity-80');
+      if (divBadge) divBadge.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-amber-500 font-bold"><i data-lucide="lock" class="w-3 h-3"></i> [${user.scopeName || 'Divisi'}]</span>`;
+    } else {
+      divSelect.disabled = false;
+      divSelect.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'cursor-not-allowed', 'opacity-80');
+      if (divBadge) divBadge.innerHTML = `<span class="text-[10px] text-slate-400">Otomatis untuk KIR & Stiker</span>`;
     }
   }
 
@@ -8779,8 +8798,8 @@ function openModalTambahRuangan(roomId = null) {
     if (codeInput) codeInput.value = r.code || '';
     if (nameInput) nameInput.value = r.name;
     if (floorInput) floorInput.value = r.floor || '';
-    if (branchSelect && r.branchId) branchSelect.value = r.branchId;
-    if (divSelect) divSelect.value = r.divisionId || '';
+    if (branchSelect && r.branchId && (!isWilayah || !user?.scopeId)) branchSelect.value = r.branchId;
+    if (divSelect && r.divisionId && (!isDivisi || !user?.scopeId)) divSelect.value = r.divisionId;
     if (pjInput) pjInput.value = r.pj || '';
     if (nipInput) nipInput.value = r.pjNip || '';
   } else {
@@ -8794,6 +8813,7 @@ function openModalTambahRuangan(roomId = null) {
   }
 
   previewRoomDivisionLogo();
+  if (window.lucide) lucide.createIcons();
   openModal('modal-tambah-ruangan');
 }
 
@@ -8834,27 +8854,41 @@ function generateRoomCodeHelper(name) {
 
 function saveRoomForm(event) {
   event.preventDefault();
+  const user = (typeof AuthEngine !== 'undefined') ? AuthEngine.getCurrentUser() : null;
+  const isDivisi = (typeof AuthEngine !== 'undefined') && AuthEngine.isDivisi();
+  const isWilayah = (typeof AuthEngine !== 'undefined') && AuthEngine.isWilayah();
+
   const id = document.getElementById('form-room-id').value;
   const name = document.getElementById('form-room-name').value.trim();
   const codeRaw = document.getElementById('form-room-code')?.value.trim();
   const code = (codeRaw || generateRoomCodeHelper(name)).toUpperCase();
   const floor = document.getElementById('form-room-floor').value.trim();
+  
   const branchSelect = document.getElementById('form-room-branch');
-  const branchId = branchSelect ? branchSelect.value : null;
-  const branchName = branchSelect && branchSelect.selectedIndex >= 0 ? branchSelect.options[branchSelect.selectedIndex].text.replace(/^[🏢📍]\s*/, '') : '';
-  const divisionId = document.getElementById('form-room-division').value;
+  let branchId = (isWilayah && user?.scopeId) ? user.scopeId : (branchSelect ? branchSelect.value : null);
+  let branchName = '';
+  if (branchId) {
+    const b = db.getBranchById(branchId);
+    branchName = b ? b.name : (user?.scopeId === branchId ? user.scopeName : '');
+  }
+  if (!branchName && branchSelect && branchSelect.selectedIndex >= 0) {
+    branchName = branchSelect.options[branchSelect.selectedIndex].text.replace(/^[🏢📍]\s*/, '');
+  }
+
+  const divSelect = document.getElementById('form-room-division');
+  let divisionId = (isDivisi && user?.scopeId) ? user.scopeId : (divSelect ? divSelect.value : '');
+  let divisionName = '';
+  if (divisionId) {
+    const d = db.getDivisionById(divisionId);
+    divisionName = d ? d.name : (user?.scopeId === divisionId ? user.scopeName : '');
+  }
+
   const pj = document.getElementById('form-room-pj').value.trim();
   const pjNip = document.getElementById('form-room-nip').value.trim();
 
   if (!name) {
     showToast('Nama Ruangan wajib diisi.', 'warning');
     return;
-  }
-
-  let divisionName = '';
-  if (divisionId) {
-    const d = db.getDivisionById(divisionId);
-    if (d) divisionName = d.name;
   }
 
   let rooms = db.getRooms();
