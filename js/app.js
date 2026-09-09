@@ -9570,20 +9570,109 @@ function downloadExcelTemplate() {
       'Cabang / Wilayah': sampleCabang,
       'Ruangan': 'Kantor Sekretariat',
       'Merek/Tipe': 'Lenovo / Core i7 RAM 16GB',
+      'Jumlah (Qty)': 1,
+      'Satuan': 'Unit',
       'No. Seri': 'SN-LNV-882190',
       'Tanggal Beli (YYYY-MM-DD)': '2026-01-15',
       'Harga Perolehan (Angka)': 12500000,
       'Masa Manfaat (Tahun)': 4,
       'Kondisi (Baik/Rusak Ringan/Rusak Berat)': 'Baik',
       'Penanggung Jawab': 'Ahmad Fauzi',
-      'Sumber Dana': 'Dana BOS 2026',
+      'Sumber Dana': 'Kas Riayah',
       'Catatan': 'Kelengkapan charger + tas'
+    },
+    {
+      'No Induk': '002/INV-RYH/2026',
+      'Kode Aset': 'RYH-PRB-AULA-2026-002',
+      'Nama Barang': 'Meja Rapat Kayu Jati 10 Kursi',
+      'Kategori': 'Perabot / Mebelair',
+      'Divisi': sampleDivisi,
+      'Cabang / Wilayah': sampleCabang,
+      'Ruangan': 'Aula Pertemuan',
+      'Merek/Tipe': 'Informa Executive',
+      'Jumlah (Qty)': 1,
+      'Satuan': 'Set',
+      'No. Seri': '-',
+      'Tanggal Beli (YYYY-MM-DD)': '2026-02-10',
+      'Harga Perolehan (Angka)': 8500000,
+      'Masa Manfaat (Tahun)': 8,
+      'Kondisi (Baik/Rusak Ringan/Rusak Berat)': 'Baik',
+      'Penanggung Jawab': 'Divisi Riayah',
+      'Sumber Dana': 'Wakaf Sarpras',
+      'Catatan': 'Kondisi mulus dan terawat'
+    },
+    {
+      'No Induk': '003/INV-RYH/2026',
+      'Kode Aset': 'RYH-ELE-UTM-2026-003',
+      'Nama Barang': 'AC Inverter 2 PK Ruangan',
+      'Kategori': 'Elektronik',
+      'Divisi': sampleDivisi,
+      'Cabang / Wilayah': sampleCabang,
+      'Ruangan': 'Ruang Utama Masjid',
+      'Merek/Tipe': 'Daikin Flash Inverter 2PK',
+      'Jumlah (Qty)': 2,
+      'Satuan': 'Unit',
+      'No. Seri': 'DKN-2024-9988',
+      'Tanggal Beli (YYYY-MM-DD)': '2026-02-20',
+      'Harga Perolehan (Angka)': 7200000,
+      'Masa Manfaat (Tahun)': 5,
+      'Kondisi (Baik/Rusak Ringan/Rusak Berat)': 'Baik',
+      'Penanggung Jawab': 'Tim Sarpras',
+      'Sumber Dana': 'Infaq Masjid',
+      'Catatan': 'Garansi kompresor 3 tahun'
     }
   ];
 
   const ws = XLSX.utils.json_to_sheet(templateData);
+
+  // Set Auto-fitted Column Widths agar rapi & tidak terpotong saat dibuka di Excel
+  ws['!cols'] = [
+    { wch: 18 }, // No Induk
+    { wch: 24 }, // Kode Aset
+    { wch: 32 }, // Nama Barang
+    { wch: 22 }, // Kategori
+    { wch: 28 }, // Divisi
+    { wch: 36 }, // Cabang / Wilayah
+    { wch: 22 }, // Ruangan
+    { wch: 28 }, // Merek/Tipe
+    { wch: 14 }, // Jumlah (Qty)
+    { wch: 12 }, // Satuan
+    { wch: 18 }, // No. Seri
+    { wch: 26 }, // Tanggal Beli (YYYY-MM-DD)
+    { wch: 24 }, // Harga Perolehan (Angka)
+    { wch: 22 }, // Masa Manfaat (Tahun)
+    { wch: 36 }, // Kondisi (Baik/Rusak Ringan/Rusak Berat)
+    { wch: 22 }, // Penanggung Jawab
+    { wch: 20 }, // Sumber Dana
+    { wch: 32 }  // Catatan
+  ];
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Template Import');
+
+  // Sheet 2: Panduan & Master Referensi
+  const categories = db.getCategories();
+  const divisions = db.getDivisions ? db.getDivisions() : [];
+  const branches = db.getBranches ? db.getBranches() : [];
+
+  const refData = [
+    { 'PANDUAN PENGISIAN': '1. Jangan mengubah nama judul kolom di baris pertama pada Sheet "Template Import".' },
+    { 'PANDUAN PENGISIAN': '2. Tanggal diisi dengan format YYYY-MM-DD (contoh: 2026-03-10).' },
+    { 'PANDUAN PENGISIAN': '3. Harga Perolehan diisi berupa ANGKA SAJA tanpa titik/koma/simbol Rp (contoh: 5000000).' },
+    { 'PANDUAN PENGISIAN': '4. Pilihan Kondisi: Baik / Rusak Ringan / Rusak Berat.' },
+    { 'PANDUAN PENGISIAN': '5. Kode Aset boleh dikosongkan jika ingin digenerate otomatis oleh sistem.' },
+    { 'PANDUAN PENGISIAN': '--- DAFTAR KATEGORI RESMI ---' },
+    ...categories.map(c => ({ 'PANDUAN PENGISIAN': `• ${c.name} (${c.code})` })),
+    { 'PANDUAN PENGISIAN': '--- DAFTAR DIVISI RESMI ---' },
+    ...divisions.map(d => ({ 'PANDUAN PENGISIAN': `• ${d.name}` })),
+    { 'PANDUAN PENGISIAN': '--- DAFTAR CABANG RESMI ---' },
+    ...branches.map(b => ({ 'PANDUAN PENGISIAN': `• ${b.name}` }))
+  ];
+
+  const wsRef = XLSX.utils.json_to_sheet(refData);
+  wsRef['!cols'] = [{ wch: 80 }];
+  XLSX.utils.book_append_sheet(wb, wsRef, 'Panduan & Referensi');
+
   XLSX.writeFile(wb, 'Template_Import_Aset.xlsx');
 }
 
