@@ -955,31 +955,39 @@ body.dark {
 
 /* Settings Tab Buttons */
 .settings-tab-btn {
-  padding: 0.65rem 1rem;
-  border-bottom: 2px solid transparent;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
   color: #64748b;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   transition: all 0.2s ease;
   white-space: nowrap;
   cursor: pointer;
+  background: transparent;
 }
 .dark .settings-tab-btn {
   color: #94a3b8;
 }
 .settings-tab-btn:hover {
   color: #d97706;
+  background: rgba(245, 158, 11, 0.08);
 }
 .dark .settings-tab-btn:hover {
-  color: #f59e0b;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
 }
 .settings-tab-btn.active {
-  color: #d97706;
-  border-bottom-color: #f59e0b;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+  font-weight: 700;
 }
 .dark .settings-tab-btn.active {
-  color: #f59e0b;
-  border-bottom-color: #f59e0b;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.4);
+  font-weight: 700;
 }
 
 /* Code Preset Button */

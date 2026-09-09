@@ -64,7 +64,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="css/styles.css?v=2.7.0">
+  <link rel="stylesheet" href="css/styles.css?v=2.7.10">
 
   <style>
     /* ── LOGIN OVERLAY (FULL STANDALONE DESIGN) ───────────────── */
@@ -2605,8 +2605,12 @@
         </div>
 
         <!-- Tab Settings Navigation -->
-        <div class="flex border-b border-slate-200 dark:border-slate-800 gap-4 text-sm font-semibold overflow-x-auto pb-px">
+        <div class="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 text-xs font-semibold">
           <button onclick="switchSettingsTab('profil')" id="set-tab-profil" class="settings-tab-btn active">Profil & Kop Surat</button>
+          <button onclick="switchSettingsTab('users')" id="set-tab-users" class="settings-tab-btn flex items-center gap-1.5">
+            <i data-lucide="users" class="w-3.5 h-3.5"></i>Manajemen User
+            <span class="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 rounded-full">Admin</span>
+          </button>
           <button onclick="switchSettingsTab('cabang')" id="set-tab-cabang" class="settings-tab-btn">Master Cabang & Wilayah</button>
           <button onclick="switchSettingsTab('divisi')" id="set-tab-divisi" class="settings-tab-btn">Master Divisi & Logo</button>
           <button onclick="switchSettingsTab('ruangan')" id="set-tab-ruangan" class="settings-tab-btn">Master Ruangan</button>
@@ -2616,10 +2620,6 @@
           <button onclick="switchSettingsTab('backup')" id="set-tab-backup" class="settings-tab-btn">Backup & Restore</button>
           <button onclick="switchSettingsTab('database')" id="set-tab-database" class="settings-tab-btn flex items-center gap-1.5">
             <i data-lucide="database" class="w-3.5 h-3.5 text-blue-500"></i>Koneksi Cloud
-          </button>
-          <button onclick="switchSettingsTab('users')" id="set-tab-users" class="settings-tab-btn flex items-center gap-1.5">
-            <i data-lucide="users" class="w-3.5 h-3.5"></i>Manajemen User
-            <span class="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 rounded-full">Admin</span>
           </button>
         </div>
 
@@ -5643,17 +5643,17 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- APPLICATION SCRIPTS -->
-  <script src="js/master-barang.js?v=2.7.9"></script>
-  <script src="js/db.js?v=2.7.9"></script>
-  <script src="js/depreciation.js?v=2.7.9"></script>
-  <script src="js/qr-engine.js?v=2.7.9"></script>
-  <script src="js/reports.js?v=2.7.9"></script>
+  <script src="js/master-barang.js?v=2.7.10"></script>
+  <script src="js/db.js?v=2.7.10"></script>
+  <script src="js/depreciation.js?v=2.7.10"></script>
+  <script src="js/qr-engine.js?v=2.7.10"></script>
+  <script src="js/reports.js?v=2.7.10"></script>
   <!-- Supabase Cloud Engine -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js?v=2.7.9"></script>
+  <script src="js/supabase-client.js?v=2.7.10"></script>
   <!-- Auth Engine: Must be AFTER db.js and BEFORE app.js -->
-  <script src="js/auth.js?v=2.7.9"></script>
-  <script src="js/app.js?v=2.7.9"></script>
+  <script src="js/auth.js?v=2.7.10"></script>
+  <script src="js/app.js?v=2.7.10"></script>
   
   <script>
     // Initialize Lucide Icons on initial load & trigger background spreadsheet sync
