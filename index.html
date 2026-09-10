@@ -76,7 +76,7 @@
       width: 100vw !important;
       height: 100vh !important;
       z-index: 99999 !important;
-      display: flex !important;
+      display: flex;
       align-items: center !important;
       justify-content: center !important;
       background: linear-gradient(180deg, rgba(8, 11, 18, 0.78) 0%, rgba(6, 9, 15, 0.94) 100%), url('assets/warehouse-bg.jpg') center center / cover no-repeat fixed !important;
@@ -92,6 +92,7 @@
       opacity: 0 !important;
       visibility: hidden !important;
       pointer-events: none !important;
+      z-index: -1 !important;
     }
     @keyframes loginFadeIn {
       from { opacity: 0; transform: translateY(20px) scale(0.97); }
@@ -463,8 +464,6 @@
 
       <!-- Copyright Footer -->
       <p class="login-footer-copy">
-        &copy; 2025 Sistem Inventaris QR. All Rights Reserved.
-      </p>
         &copy; 2025 Sistem Inventaris QR. All Rights Reserved.
       </p>
 

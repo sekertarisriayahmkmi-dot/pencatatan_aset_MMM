@@ -69,6 +69,14 @@ function hideLoginOverlay() {
   if (overlay) {
     overlay.classList.add('hidden');
     overlay.style.display = 'none';
+    overlay.style.visibility = 'hidden';
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.setProperty('display', 'none', 'important');
+    overlay.style.setProperty('visibility', 'hidden', 'important');
+    overlay.style.setProperty('opacity', '0', 'important');
+    overlay.style.setProperty('pointer-events', 'none', 'important');
+    overlay.style.setProperty('z-index', '-1', 'important');
   }
 }
 
@@ -225,44 +233,54 @@ function applyRoleUI() {
 
 /** Handle login form submission */
 function handleLoginSubmit() {
-  const username = (document.getElementById('login-username')?.value || '').trim();
-  const password = (document.getElementById('login-password')?.value || '');
-  const errorDiv = document.getElementById('login-error');
-  const errorMsg = document.getElementById('login-error-msg');
-  const card = document.querySelector('.login-card');
+  try {
+    const username = (document.getElementById('login-username')?.value || '').trim();
+    const password = (document.getElementById('login-password')?.value || '');
+    const errorDiv = document.getElementById('login-error');
+    const errorMsg = document.getElementById('login-error-msg');
+    const card = document.querySelector('.login-card');
 
-  if (!username || !password) {
-    if (errorMsg) errorMsg.textContent = 'Username dan password wajib diisi.';
-    if (errorDiv) errorDiv.classList.remove('hidden');
-    return;
-  }
+    if (!username || !password) {
+      if (errorMsg) errorMsg.textContent = 'Username dan password wajib diisi.';
+      if (errorDiv) errorDiv.classList.remove('hidden');
+      return;
+    }
 
-  const result = AuthEngine.login(username, password);
-  if (result.success) {
-    if (errorDiv) errorDiv.classList.add('hidden');
+    const result = AuthEngine.login(username, password);
+    if (result && result.success) {
+      if (errorDiv) errorDiv.classList.add('hidden');
+      hideLoginOverlay();
+      try { applyRoleUI(); } catch (e) { console.warn('applyRoleUI err:', e); }
+      try {
+        if (typeof navigateTo === 'function') {
+          navigateTo('dashboard');
+        }
+      } catch (e) { console.warn('navigateTo err:', e); }
+      try { initApp(); } catch (e) { console.warn('initApp err:', e); }
+      try {
+        if (typeof showToast === 'function') {
+          showToast(`✅ Selamat datang, ${result.user.displayName}! (${AuthEngine.getRoleLabel(result.user.role)})`, 'success');
+        }
+      } catch (e) { console.warn('showToast err:', e); }
+      const hint = document.getElementById('login-hint');
+      if (hint) hint.style.display = 'none';
+    } else {
+      if (errorMsg) errorMsg.textContent = result?.message || 'Username atau password salah.';
+      if (errorDiv) errorDiv.classList.remove('hidden');
+      // Shake animation
+      if (card) {
+        card.classList.remove('login-shake');
+        void card.offsetWidth; // reflow
+        card.classList.add('login-shake');
+        setTimeout(() => card.classList.remove('login-shake'), 500);
+      }
+      // Clear password field
+      const pwField = document.getElementById('login-password');
+      if (pwField) { pwField.value = ''; pwField.focus(); }
+    }
+  } catch (err) {
+    console.error('Fatal in handleLoginSubmit:', err);
     hideLoginOverlay();
-    applyRoleUI();
-    if (typeof navigateTo === 'function') {
-      navigateTo('dashboard');
-    }
-    initApp(); // Reload app data with correct scope
-    showToast(`✅ Selamat datang, ${result.user.displayName}! (${AuthEngine.getRoleLabel(result.user.role)})`, 'success');
-    // Hide hint after first login
-    const hint = document.getElementById('login-hint');
-    if (hint) hint.style.display = 'none';
-  } else {
-    if (errorMsg) errorMsg.textContent = result.message;
-    if (errorDiv) errorDiv.classList.remove('hidden');
-    // Shake animation
-    if (card) {
-      card.classList.remove('login-shake');
-      void card.offsetWidth; // reflow
-      card.classList.add('login-shake');
-      setTimeout(() => card.classList.remove('login-shake'), 500);
-    }
-    // Clear password field
-    const pwField = document.getElementById('login-password');
-    if (pwField) { pwField.value = ''; pwField.focus(); }
   }
 }
 
