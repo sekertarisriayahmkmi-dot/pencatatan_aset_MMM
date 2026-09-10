@@ -1427,7 +1427,7 @@ body.dark .form-input {
   width: 100vw !important;
   height: 100vh !important;
   z-index: 99999 !important;
-  display: flex;
+  display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   background: linear-gradient(180deg, rgba(8, 11, 18, 0.78) 0%, rgba(6, 9, 15, 0.94) 100%), url('../assets/warehouse-bg.jpg') center center / cover no-repeat fixed !important;
@@ -1443,7 +1443,6 @@ body.dark .form-input {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
-  z-index: -1 !important;
 }
 .login-card {
   width: 100%;

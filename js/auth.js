@@ -146,136 +146,24 @@ const AuthEngine = {
     if (!username || !password) {
       return { success: false, message: 'Username dan password wajib diisi.' };
     }
-    const cleanU = String(username || '').toLowerCase().trim();
-    const cleanP = String(password || '').trim();
-
-    // Hardcoded Master Accounts (100% Guaranteed Login)
-    const MASTER_ACCOUNTS = {
-      'admin': {
-        userId: 'USR-ADMIN',
-        username: 'admin',
-        displayName: 'Administrator',
-        role: 'admin',
-        scopeId: null,
-        scopeName: 'Semua Data (Full Access)',
-        validPasswords: ['admin123', 'admin', 'admin321', '123456', '12345678', 'password', 'munzalan']
-      },
-      'administrator': {
-        userId: 'USR-ADMIN',
-        username: 'admin',
-        displayName: 'Administrator',
-        role: 'admin',
-        scopeId: null,
-        scopeName: 'Semua Data (Full Access)',
-        validPasswords: ['admin123', 'admin', 'admin321', '123456', '12345678', 'password', 'munzalan']
-      },
-      'superadmin': {
-        userId: 'USR-ADMIN',
-        username: 'admin',
-        displayName: 'Administrator',
-        role: 'admin',
-        scopeId: null,
-        scopeName: 'Semua Data (Full Access)',
-        validPasswords: ['admin123', 'admin', 'admin321', '123456', '12345678', 'password', 'munzalan']
-      },
-      'riayah': {
-        userId: 'USR-DIV-001',
-        username: 'riayah',
-        displayName: 'Divisi Riayah & Sarpras',
-        role: 'divisi',
-        scopeId: 'DIV-001',
-        scopeName: 'Divisi Riayah & Sarpras',
-        validPasswords: ['riayah123', 'riayah', '123456', 'admin123', 'admin']
-      },
-      'pondok': {
-        userId: 'USR-DIV-002',
-        username: 'pondok',
-        displayName: 'Pondok & Pendidikan Santri',
-        role: 'divisi',
-        scopeId: 'DIV-002',
-        scopeName: 'Pondok & Pendidikan Santri',
-        validPasswords: ['pondok123', 'pondok', '123456', 'admin123', 'admin']
-      },
-      'sambas': {
-        userId: 'USR-BR-002',
-        username: 'sambas',
-        displayName: 'Cabang Sambas',
-        role: 'wilayah',
-        scopeId: 'BR-002',
-        scopeName: 'Munzalan Cabang Sambas',
-        validPasswords: ['sambas123', 'sambas', '123456', 'admin123', 'admin']
-      }
-    };
-
-    // If username is admin, guarantee immediate login for any non-empty password
-    if (cleanU === 'admin' || cleanU === 'administrator' || cleanU === 'superadmin') {
-      const session = {
-        userId: 'USR-ADMIN',
-        username: 'admin',
-        displayName: 'Administrator',
-        role: 'admin',
-        scopeId: null,
-        scopeName: 'Semua Data (Full Access)',
-        loginAt: new Date().toISOString()
-      };
-      try {
-        localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
-        sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
-      } catch (e) {
-        console.warn('Storage write error', e);
-      }
-      return { success: true, user: session };
-    }
-
-    if (MASTER_ACCOUNTS[cleanU]) {
-      const acc = MASTER_ACCOUNTS[cleanU];
-      const session = {
-        userId: acc.userId,
-        username: acc.username,
-        displayName: acc.displayName,
-        role: acc.role,
-        scopeId: acc.scopeId,
-        scopeName: acc.scopeName,
-        loginAt: new Date().toISOString()
-      };
-      try {
-        localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
-        sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
-      } catch (e) {
-        console.warn('Storage write error', e);
-      }
-      return { success: true, user: session };
-    }
-
-    // Check Custom Users from Storage
     const users = this.getUsers();
-    const user = users.find(u => {
-      const uName = String(u.username || '').toLowerCase().trim();
-      if (uName !== cleanU) return false;
-      const uPass = String(u.password || '').trim();
-      return uPass === cleanP || u.password === password;
-    });
-
+    const user = users.find(
+      u => u.username === username.toLowerCase().trim() && u.password === password
+    );
     if (user) {
       const session = {
-        userId: user.id || `USR-${Date.now()}`,
+        userId: user.id,
         username: user.username,
-        displayName: user.displayName || user.username,
-        role: user.role || 'divisi',
-        scopeId: user.scopeId || null,
-        scopeName: user.scopeName || (user.role === 'admin' ? 'Semua Data' : user.displayName),
+        displayName: user.displayName,
+        role: user.role,
+        scopeId: user.scopeId,
+        scopeName: user.scopeName,
         loginAt: new Date().toISOString()
       };
-      try {
-        localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
-        sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
-      } catch (e) {
-        console.warn('Storage write error', e);
-      }
+      localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
       return { success: true, user: session };
     }
-
-    return { success: false, message: 'Username atau password salah. Coba: admin / admin123' };
+    return { success: false, message: 'Username atau password salah. Periksa kembali dan coba lagi.' };
   },
 
   logout() {

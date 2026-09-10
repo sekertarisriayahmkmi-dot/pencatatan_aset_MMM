@@ -69,14 +69,6 @@ function hideLoginOverlay() {
   if (overlay) {
     overlay.classList.add('hidden');
     overlay.style.display = 'none';
-    overlay.style.visibility = 'hidden';
-    overlay.style.opacity = '0';
-    overlay.style.pointerEvents = 'none';
-    overlay.style.setProperty('display', 'none', 'important');
-    overlay.style.setProperty('visibility', 'hidden', 'important');
-    overlay.style.setProperty('opacity', '0', 'important');
-    overlay.style.setProperty('pointer-events', 'none', 'important');
-    overlay.style.setProperty('z-index', '-1', 'important');
   }
 }
 
@@ -89,7 +81,10 @@ function applyRoleUI() {
 
   // 1. Show topbar user badge
   const badge = document.getElementById('topbar-user-badge');
-  if (badge) badge.style.display = 'flex';
+  if (badge) {
+    badge.classList.remove('hidden');
+    badge.style.display = 'flex';
+  }
 
   const nameEl = document.getElementById('topbar-user-name');
   if (nameEl) nameEl.textContent = user.displayName;
@@ -233,54 +228,44 @@ function applyRoleUI() {
 
 /** Handle login form submission */
 function handleLoginSubmit() {
-  try {
-    const username = (document.getElementById('login-username')?.value || '').trim();
-    const password = (document.getElementById('login-password')?.value || '');
-    const errorDiv = document.getElementById('login-error');
-    const errorMsg = document.getElementById('login-error-msg');
-    const card = document.querySelector('.login-card');
+  const username = (document.getElementById('login-username')?.value || '').trim();
+  const password = (document.getElementById('login-password')?.value || '');
+  const errorDiv = document.getElementById('login-error');
+  const errorMsg = document.getElementById('login-error-msg');
+  const card = document.querySelector('.login-card');
 
-    if (!username || !password) {
-      if (errorMsg) errorMsg.textContent = 'Username dan password wajib diisi.';
-      if (errorDiv) errorDiv.classList.remove('hidden');
-      return;
-    }
+  if (!username || !password) {
+    if (errorMsg) errorMsg.textContent = 'Username dan password wajib diisi.';
+    if (errorDiv) errorDiv.classList.remove('hidden');
+    return;
+  }
 
-    const result = AuthEngine.login(username, password);
-    if (result && result.success) {
-      if (errorDiv) errorDiv.classList.add('hidden');
-      hideLoginOverlay();
-      try { applyRoleUI(); } catch (e) { console.warn('applyRoleUI err:', e); }
-      try {
-        if (typeof navigateTo === 'function') {
-          navigateTo('dashboard');
-        }
-      } catch (e) { console.warn('navigateTo err:', e); }
-      try { initApp(); } catch (e) { console.warn('initApp err:', e); }
-      try {
-        if (typeof showToast === 'function') {
-          showToast(`✅ Selamat datang, ${result.user.displayName}! (${AuthEngine.getRoleLabel(result.user.role)})`, 'success');
-        }
-      } catch (e) { console.warn('showToast err:', e); }
-      const hint = document.getElementById('login-hint');
-      if (hint) hint.style.display = 'none';
-    } else {
-      if (errorMsg) errorMsg.textContent = result?.message || 'Username atau password salah.';
-      if (errorDiv) errorDiv.classList.remove('hidden');
-      // Shake animation
-      if (card) {
-        card.classList.remove('login-shake');
-        void card.offsetWidth; // reflow
-        card.classList.add('login-shake');
-        setTimeout(() => card.classList.remove('login-shake'), 500);
-      }
-      // Clear password field
-      const pwField = document.getElementById('login-password');
-      if (pwField) { pwField.value = ''; pwField.focus(); }
-    }
-  } catch (err) {
-    console.error('Fatal in handleLoginSubmit:', err);
+  const result = AuthEngine.login(username, password);
+  if (result.success) {
+    if (errorDiv) errorDiv.classList.add('hidden');
     hideLoginOverlay();
+    applyRoleUI();
+    if (typeof navigateTo === 'function') {
+      navigateTo('dashboard');
+    }
+    initApp(); // Reload app data with correct scope
+    showToast(`✅ Selamat datang, ${result.user.displayName}! (${AuthEngine.getRoleLabel(result.user.role)})`, 'success');
+    // Hide hint after first login
+    const hint = document.getElementById('login-hint');
+    if (hint) hint.style.display = 'none';
+  } else {
+    if (errorMsg) errorMsg.textContent = result.message;
+    if (errorDiv) errorDiv.classList.remove('hidden');
+    // Shake animation
+    if (card) {
+      card.classList.remove('login-shake');
+      void card.offsetWidth; // reflow
+      card.classList.add('login-shake');
+      setTimeout(() => card.classList.remove('login-shake'), 500);
+    }
+    // Clear password field
+    const pwField = document.getElementById('login-password');
+    if (pwField) { pwField.value = ''; pwField.focus(); }
   }
 }
 
@@ -333,18 +318,18 @@ window.quickFillLogin = quickFillLogin;
 window.toggleLoginPasswordVisibility = toggleLoginPasswordVisibility;
 
 /** Toggle password visibility on login form */
-function toggleLoginPasswordVisibility(e) {
-  if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
+function toggleLoginPasswordVisibility() {
   const input = document.getElementById('login-password');
-  const btn = document.getElementById('btn-toggle-pw') || document.querySelector('.login-eye-btn');
+  const icon = document.getElementById('login-pw-eye');
   if (!input) return;
   if (input.type === 'password') {
     input.type = 'text';
-    if (btn) btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c084fc;"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>';
+    if (icon) icon.setAttribute('data-lucide', 'eye-off');
   } else {
     input.type = 'password';
-    if (btn) btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #94a3b8;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+    if (icon) icon.setAttribute('data-lucide', 'eye');
   }
+  if (window.lucide) lucide.createIcons();
 }
 
 /** Quick fill credentials from hint helper */
@@ -714,8 +699,9 @@ function toggleResetPwVisibility() {
  */
 function initDarkMode() {
   const savedTheme = localStorage.getItem('asetpro_theme');
+  // Default to dark if no preference saved (body starts with class="dark")
   const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  isDarkMode = savedTheme === 'dark' || (!savedTheme && prefersDark);
+  isDarkMode = (savedTheme === 'dark') || (!savedTheme && (prefersDark || document.documentElement.classList.contains('dark')));
 
   applyDarkModeState(isDarkMode);
 
@@ -723,12 +709,18 @@ function initDarkMode() {
   if (themeSwitch) {
     themeSwitch.checked = isDarkMode;
   }
+
+  // Sync label
+  const themeLabel = document.getElementById('sidebar-theme-label');
+  if (themeLabel) {
+    themeLabel.textContent = isDarkMode ? 'Mode Gelap' : 'Mode Terang';
+  }
 }
 
 function toggleDarkMode(enableDark) {
   isDarkMode = enableDark;
   localStorage.setItem('asetpro_theme', isDarkMode ? 'dark' : 'light');
-  
+
   const themeSwitch = document.getElementById('theme-switch');
   if (themeSwitch && themeSwitch.checked !== enableDark) {
     themeSwitch.checked = enableDark;
@@ -736,14 +728,20 @@ function toggleDarkMode(enableDark) {
 
   applyDarkModeState(isDarkMode);
   showToast(isDarkMode ? '🌙 Mode Gelap Aktif' : '☀️ Mode Terang Aktif', 'info');
+
+  // Re-render lucide icons after theme change so sun/moon swap correctly
+  if (window.lucide) setTimeout(() => lucide.createIcons(), 50);
 }
 
+
 function handleSidebarThemeClick(event) {
-  if (event && (event.target.closest('#theme-switch') || event.target.closest('.neon-toggle'))) {
-    return;
-  }
+  // If user clicked the checkbox or its label, let the onchange handle it
+  const clickedToggle = event.target.closest('.neon-toggle') || event.target.id === 'theme-switch';
+  if (clickedToggle) return;
+  // Clicking anywhere else on the card toggles dark mode
   toggleDarkMode(!isDarkMode);
 }
+
 
 function applyDarkModeState(enableDark) {
   const html = document.documentElement;
@@ -765,8 +763,15 @@ function applyDarkModeState(enableDark) {
     themeLabel.textContent = enableDark ? 'Mode Gelap' : 'Mode Terang';
   }
 
+  // Toggle sun/moon icons by ID (more reliable than dark: Tailwind classes after lucide re-render)
+  const iconSun = document.getElementById('theme-icon-sun');
+  const iconMoon = document.getElementById('theme-icon-moon');
+  if (iconSun) iconSun.style.display = enableDark ? 'block' : 'none';
+  if (iconMoon) iconMoon.style.display = enableDark ? 'none' : 'block';
+
   if (window.lucide) lucide.createIcons();
 }
+
 
 /**
  * ========================================================
@@ -2107,8 +2112,6 @@ function renderAssetTable(filteredAssets = null) {
 
   const bastList = typeof db.getBASTList === 'function' ? db.getBASTList() : [];
 
-  const isAdmin = (typeof AuthEngine !== 'undefined') ? AuthEngine.isAdmin() : true;
-
   tbody.innerHTML = assets.map(a => {
     const calc = DepreciationEngine.calculateCurrentValue(a, settings);
     const qrThumbId = `qr-mini-${a.id.replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -2189,19 +2192,20 @@ function renderAssetTable(filteredAssets = null) {
             <button onclick="printSingleSticker('${a.id}')" class="p-1.5 text-slate-500 hover:text-teal-500 hover:bg-teal-500/10 rounded-lg transition-colors" title="Cetak Stiker QR">
               <i data-lucide="printer" class="w-4 h-4"></i>
             </button>
-            ${isAdmin ? `
-              <button onclick="hapusAsetSalahInput('${a.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg transition-colors" title="Hapus Aset (Khusus Admin / Salah Input)">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            ` : (a.isUnderDisposalRequest ? `
+            ${a.isUnderDisposalRequest ? `
               <button onclick="navigateTo('disposal'); switchDisposalTab('requests'); document.getElementById('filter-disp-req-search').value='${a.code}'; renderDisposalRequestsTable();" class="p-1.5 text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-colors" title="Lihat Berkas Usulan Penghapusan">
                 <i data-lucide="clock" class="w-4 h-4"></i>
               </button>
             ` : `
-              <button onclick="openModalAjukanPenghapusan('${a.id}')" class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 rounded-lg transition-colors" title="Ajukan Usulan Penghapusan (Rusak / Afkir)">
-                <i data-lucide="file-x" class="w-4 h-4"></i>
+              <button onclick="openModalAjukanPenghapusan('${a.id}')" class="p-1.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors" title="Ajukan Permohonan Penghapusan">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
-            `)}
+            `}
+            ${(typeof AuthEngine !== 'undefined' && AuthEngine.isAdmin()) ? `
+              <button onclick="adminHapusAsetPermanent('${a.id}', '${a.name.replace(/'/g, "\\'")}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-400/30" title="[ADMIN] Hapus Data Permanen">
+                <i data-lucide="x-circle" class="w-4 h-4"></i>
+              </button>
+            ` : ''}
           </div>
         </td>
       </tr>
@@ -2974,9 +2978,6 @@ function openModalTambahAset() {
   const splitCheck = document.getElementById('asset-split-units');
   if (splitCheck) splitCheck.checked = false;
 
-  const deleteBtn = document.getElementById('btn-delete-asset-in-form');
-  if (deleteBtn) deleteBtn.classList.add('hidden');
-
   // Set default values
   const dateElem = document.getElementById('asset-date');
   if (dateElem) dateElem.value = new Date().toISOString().split('T')[0];
@@ -3048,17 +3049,6 @@ function openModalEditAset(assetId) {
   const splitBox = document.getElementById('box-split-units');
   if (splitBox) splitBox.style.display = 'none';
   hideMasterBarangDropdown();
-
-  // Show delete button for Administrator during Edit
-  const deleteBtn = document.getElementById('btn-delete-asset-in-form');
-  const isAdmin = (typeof AuthEngine !== 'undefined') ? AuthEngine.isAdmin() : true;
-  if (deleteBtn) {
-    if (isAdmin) {
-      deleteBtn.classList.remove('hidden');
-    } else {
-      deleteBtn.classList.add('hidden');
-    }
-  }
 
   // 1. Tanggal Diterima
   document.getElementById('asset-date').value = asset.date || asset.tanggalDiterima || '';
@@ -3534,6 +3524,50 @@ function handleSaveAsset(event) {
  * 10. MODAL DETAIL ASET (16 KOLOM STANDAR BUKU INDUK)
  * ========================================================
  */
+
+// ─── [ADMIN ONLY] Hapus Data Aset Permanen ─────────────────────────────────
+function adminHapusAsetPermanent(assetId, assetName) {
+  if (!AuthEngine.isAdmin()) {
+    showToast('Akses ditolak. Hanya Administrator yang dapat menghapus data aset secara permanen.', 'error');
+    return;
+  }
+
+  const displayName = assetName || assetId;
+  const confirmed = confirm(
+    `⚠️ HAPUS DATA PERMANEN — KHUSUS ADMINISTRATOR\n\n` +
+    `Nama Aset : ${displayName}\n` +
+    `ID        : ${assetId}\n\n` +
+    `Tindakan ini akan MENGHAPUS data aset ini secara permanen dari sistem dan tidak dapat dibatalkan.\n\n` +
+    `Lanjutkan penghapusan?`
+  );
+  if (!confirmed) return;
+
+  // Double-confirm for safety
+  const reconfirmed = confirm(
+    `Konfirmasi terakhir:\nApakah Anda yakin ingin menghapus "${displayName}" secara permanen?`
+  );
+  if (!reconfirmed) return;
+
+  try {
+    db.deleteAssetPermanently(assetId);
+
+    // Also try to remove from cloud if connected
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      supabaseClient.deleteAssetFromCloud(assetId).catch(err => {
+        console.warn('[Admin Delete] Gagal hapus dari cloud, data sudah dihapus dari lokal:', err);
+      });
+    }
+
+    showToast(`Aset "${displayName}" berhasil dihapus secara permanen.`, 'success');
+    renderAssetTable();
+    renderDashboard();
+  } catch (err) {
+    console.error('[Admin Delete] Error:', err);
+    showToast('Gagal menghapus aset. Coba lagi.', 'error');
+  }
+}
+
+
 function openModalDetailAset(assetId) {
   const asset = db.getAssetById(assetId);
   if (!asset) return;
@@ -3582,11 +3616,6 @@ function openModalDetailAset(assetId) {
           <button onclick="printSingleSticker('${asset.id}')" class="btn-secondary text-xs justify-center flex-1">
             <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak Stiker QR
           </button>
-          ${(typeof AuthEngine !== 'undefined' && AuthEngine.isAdmin()) ? `
-            <button onclick="hapusAsetSalahInput('${asset.id}'); closeModal('modal-detail-aset')" class="btn-secondary text-xs text-rose-600 hover:bg-rose-500/10 hover:border-rose-500/30 justify-center flex-1" title="Hapus aset ini secara permanen karena salah input">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus Aset (Salah Input)
-            </button>
-          ` : ''}
         </div>
       </div>
 
@@ -11228,47 +11257,7 @@ function togglePasswordVisibility(inputId) {
   input.type = input.type === 'password' ? 'text' : 'password';
 }
 
-function hapusAsetSalahInput(assetId) {
-  if (typeof AuthEngine !== 'undefined' && !AuthEngine.isAdmin()) {
-    showToast('Akses ditolak. Hanya Administrator yang memiliki wewenang menghapus data aset karena salah input.', 'danger');
-    return;
-  }
-
-  const asset = db.getAssetById(assetId);
-  if (!asset) {
-    showToast('Data aset tidak ditemukan.', 'warning');
-    return;
-  }
-
-  const confirmMsg = `⚠️ KONFIRMASI HAPUS PERMANEN (SALAH INPUT)\n\nApakah Anda yakin ingin menghapus data aset ini secara permanen?\n\n• Kode: ${asset.code}\n• Nama: ${asset.name}\n• Lokasi: ${asset.roomName || '-'}\n\nPerhatian: Tindakan ini khusus untuk menghapus kesalahan penginputan data. Data akan dihapus permanen dari sistem dan cloud database.`;
-
-  if (!confirm(confirmMsg)) return;
-
-  db.deleteAssetPermanently(assetId);
-  if (window.SupabaseEngine && typeof SupabaseEngine.deleteAssetFromCloud === 'function') {
-    SupabaseEngine.deleteAssetFromCloud(assetId);
-  }
-
-  showToast(`Aset "${asset.name}" (${asset.code}) berhasil dihapus permanen oleh Administrator.`, 'success');
-
-  renderAssetTable();
-  renderDashboard();
-  renderRoomCards();
-  renderStickerGrid();
-  if (typeof renderKIBPage === 'function') renderKIBPage();
-  updateNotificationCenter();
-}
-
-function onDeleteAssetFromModalForm() {
-  const assetId = document.getElementById('asset-form-id')?.value;
-  if (!assetId) return;
-  closeModal('modal-aset');
-  hapusAsetSalahInput(assetId);
-}
-
 // Window Global Scope Function Exposures
-window.hapusAsetSalahInput = hapusAsetSalahInput;
-window.onDeleteAssetFromModalForm = onDeleteAssetFromModalForm;
 window.onFilterDivisionChange = onFilterDivisionChange;
 window.onDashboardScopeChange = onDashboardScopeChange;
 window.resetDashboardScope = resetDashboardScope;
