@@ -3727,11 +3727,18 @@
           </div>
         </details>
 
-        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-          <button type="button" onclick="closeModal('modal-aset')" class="btn-secondary text-xs">Batal</button>
-          <button type="submit" class="btn-primary text-xs">
-            <i data-lucide="check" class="w-4 h-4"></i> Simpan Data Buku Induk Barang
-          </button>
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div>
+            <button type="button" id="btn-delete-asset-in-form" onclick="onDeleteAssetFromModalForm()" class="hidden btn-secondary text-xs text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/30">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus Aset (Salah Input)
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeModal('modal-aset')" class="btn-secondary text-xs">Batal</button>
+            <button type="submit" class="btn-primary text-xs">
+              <i data-lucide="check" class="w-4 h-4"></i> Simpan Data Buku Induk Barang
+            </button>
+          </div>
         </div>
       </form>
 

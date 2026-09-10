@@ -2089,6 +2089,8 @@ function renderAssetTable(filteredAssets = null) {
 
   const bastList = typeof db.getBASTList === 'function' ? db.getBASTList() : [];
 
+  const isAdmin = (typeof AuthEngine !== 'undefined') ? AuthEngine.isAdmin() : true;
+
   tbody.innerHTML = assets.map(a => {
     const calc = DepreciationEngine.calculateCurrentValue(a, settings);
     const qrThumbId = `qr-mini-${a.id.replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -2169,15 +2171,19 @@ function renderAssetTable(filteredAssets = null) {
             <button onclick="printSingleSticker('${a.id}')" class="p-1.5 text-slate-500 hover:text-teal-500 hover:bg-teal-500/10 rounded-lg transition-colors" title="Cetak Stiker QR">
               <i data-lucide="printer" class="w-4 h-4"></i>
             </button>
-            ${a.isUnderDisposalRequest ? `
+            ${isAdmin ? `
+              <button onclick="hapusAsetSalahInput('${a.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg transition-colors" title="Hapus Aset (Khusus Admin / Salah Input)">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            ` : (a.isUnderDisposalRequest ? `
               <button onclick="navigateTo('disposal'); switchDisposalTab('requests'); document.getElementById('filter-disp-req-search').value='${a.code}'; renderDisposalRequestsTable();" class="p-1.5 text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-colors" title="Lihat Berkas Usulan Penghapusan">
                 <i data-lucide="clock" class="w-4 h-4"></i>
               </button>
             ` : `
-              <button onclick="openModalAjukanPenghapusan('${a.id}')" class="p-1.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors" title="Ajukan Permohonan Penghapusan">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              <button onclick="openModalAjukanPenghapusan('${a.id}')" class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 rounded-lg transition-colors" title="Ajukan Usulan Penghapusan (Rusak / Afkir)">
+                <i data-lucide="file-x" class="w-4 h-4"></i>
               </button>
-            `}
+            `)}
           </div>
         </td>
       </tr>
@@ -2950,6 +2956,9 @@ function openModalTambahAset() {
   const splitCheck = document.getElementById('asset-split-units');
   if (splitCheck) splitCheck.checked = false;
 
+  const deleteBtn = document.getElementById('btn-delete-asset-in-form');
+  if (deleteBtn) deleteBtn.classList.add('hidden');
+
   // Set default values
   const dateElem = document.getElementById('asset-date');
   if (dateElem) dateElem.value = new Date().toISOString().split('T')[0];
@@ -3021,6 +3030,17 @@ function openModalEditAset(assetId) {
   const splitBox = document.getElementById('box-split-units');
   if (splitBox) splitBox.style.display = 'none';
   hideMasterBarangDropdown();
+
+  // Show delete button for Administrator during Edit
+  const deleteBtn = document.getElementById('btn-delete-asset-in-form');
+  const isAdmin = (typeof AuthEngine !== 'undefined') ? AuthEngine.isAdmin() : true;
+  if (deleteBtn) {
+    if (isAdmin) {
+      deleteBtn.classList.remove('hidden');
+    } else {
+      deleteBtn.classList.add('hidden');
+    }
+  }
 
   // 1. Tanggal Diterima
   document.getElementById('asset-date').value = asset.date || asset.tanggalDiterima || '';
@@ -3544,6 +3564,11 @@ function openModalDetailAset(assetId) {
           <button onclick="printSingleSticker('${asset.id}')" class="btn-secondary text-xs justify-center flex-1">
             <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak Stiker QR
           </button>
+          ${(typeof AuthEngine !== 'undefined' && AuthEngine.isAdmin()) ? `
+            <button onclick="hapusAsetSalahInput('${asset.id}'); closeModal('modal-detail-aset')" class="btn-secondary text-xs text-rose-600 hover:bg-rose-500/10 hover:border-rose-500/30 justify-center flex-1" title="Hapus aset ini secara permanen karena salah input">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus Aset (Salah Input)
+            </button>
+          ` : ''}
         </div>
       </div>
 
@@ -11185,7 +11210,47 @@ function togglePasswordVisibility(inputId) {
   input.type = input.type === 'password' ? 'text' : 'password';
 }
 
+function hapusAsetSalahInput(assetId) {
+  if (typeof AuthEngine !== 'undefined' && !AuthEngine.isAdmin()) {
+    showToast('Akses ditolak. Hanya Administrator yang memiliki wewenang menghapus data aset karena salah input.', 'danger');
+    return;
+  }
+
+  const asset = db.getAssetById(assetId);
+  if (!asset) {
+    showToast('Data aset tidak ditemukan.', 'warning');
+    return;
+  }
+
+  const confirmMsg = `⚠️ KONFIRMASI HAPUS PERMANEN (SALAH INPUT)\n\nApakah Anda yakin ingin menghapus data aset ini secara permanen?\n\n• Kode: ${asset.code}\n• Nama: ${asset.name}\n• Lokasi: ${asset.roomName || '-'}\n\nPerhatian: Tindakan ini khusus untuk menghapus kesalahan penginputan data. Data akan dihapus permanen dari sistem dan cloud database.`;
+
+  if (!confirm(confirmMsg)) return;
+
+  db.deleteAssetPermanently(assetId);
+  if (window.SupabaseEngine && typeof SupabaseEngine.deleteAssetFromCloud === 'function') {
+    SupabaseEngine.deleteAssetFromCloud(assetId);
+  }
+
+  showToast(`Aset "${asset.name}" (${asset.code}) berhasil dihapus permanen oleh Administrator.`, 'success');
+
+  renderAssetTable();
+  renderDashboard();
+  renderRoomCards();
+  renderStickerGrid();
+  if (typeof renderKIBPage === 'function') renderKIBPage();
+  updateNotificationCenter();
+}
+
+function onDeleteAssetFromModalForm() {
+  const assetId = document.getElementById('asset-form-id')?.value;
+  if (!assetId) return;
+  closeModal('modal-aset');
+  hapusAsetSalahInput(assetId);
+}
+
 // Window Global Scope Function Exposures
+window.hapusAsetSalahInput = hapusAsetSalahInput;
+window.onDeleteAssetFromModalForm = onDeleteAssetFromModalForm;
 window.onFilterDivisionChange = onFilterDivisionChange;
 window.onDashboardScopeChange = onDashboardScopeChange;
 window.resetDashboardScope = resetDashboardScope;
