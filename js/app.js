@@ -317,16 +317,18 @@ window.toggleLoginPasswordVisibility = toggleLoginPasswordVisibility;
 /** Toggle password visibility on login form */
 function toggleLoginPasswordVisibility() {
   const input = document.getElementById('login-password');
-  const icon = document.getElementById('login-pw-eye');
+  const btn = document.getElementById('btn-toggle-pw') || document.querySelector('.login-eye-btn');
   if (!input) return;
   if (input.type === 'password') {
     input.type = 'text';
-    if (icon) icon.setAttribute('data-lucide', 'eye-off');
+    if (btn) btn.innerHTML = '<i data-lucide="eye-off" style="width: 18px; height: 18px;" id="login-pw-eye"></i>';
   } else {
     input.type = 'password';
-    if (icon) icon.setAttribute('data-lucide', 'eye');
+    if (btn) btn.innerHTML = '<i data-lucide="eye" style="width: 18px; height: 18px;" id="login-pw-eye"></i>';
   }
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  }
 }
 
 /** Quick fill credentials from hint helper */
