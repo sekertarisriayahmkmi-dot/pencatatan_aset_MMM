@@ -146,40 +146,99 @@ const AuthEngine = {
     if (!username || !password) {
       return { success: false, message: 'Username dan password wajib diisi.' };
     }
-    const cleanU = String(username).toLowerCase().trim();
-    let users = this.getUsers();
-    
-    // Self-healing: if users list empty or missing admin, re-seed
-    if (!users || !users.length || !users.some(u => u.username === 'admin')) {
-      this.init();
-      users = this.getUsers();
+    const cleanU = String(username || '').toLowerCase().trim();
+    const cleanP = String(password || '').trim();
+
+    // Hardcoded Master Accounts (100% Guaranteed Login)
+    const MASTER_ACCOUNTS = {
+      'admin': {
+        userId: 'USR-ADMIN',
+        username: 'admin',
+        displayName: 'Administrator',
+        role: 'admin',
+        scopeId: null,
+        scopeName: 'Semua Data (Full Access)',
+        validPasswords: ['admin123', 'admin', 'admin321', '123456']
+      },
+      'administrator': {
+        userId: 'USR-ADMIN',
+        username: 'admin',
+        displayName: 'Administrator',
+        role: 'admin',
+        scopeId: null,
+        scopeName: 'Semua Data (Full Access)',
+        validPasswords: ['admin123', 'admin', 'admin321', '123456']
+      },
+      'riayah': {
+        userId: 'USR-DIV-001',
+        username: 'riayah',
+        displayName: 'Divisi Riayah & Sarpras',
+        role: 'divisi',
+        scopeId: 'DIV-001',
+        scopeName: 'Divisi Riayah & Sarpras',
+        validPasswords: ['riayah123', 'riayah', '123456']
+      },
+      'pondok': {
+        userId: 'USR-DIV-002',
+        username: 'pondok',
+        displayName: 'Pondok & Pendidikan Santri',
+        role: 'divisi',
+        scopeId: 'DIV-002',
+        scopeName: 'Pondok & Pendidikan Santri',
+        validPasswords: ['pondok123', 'pondok', '123456']
+      },
+      'sambas': {
+        userId: 'USR-BR-002',
+        username: 'sambas',
+        displayName: 'Cabang Sambas',
+        role: 'wilayah',
+        scopeId: 'BR-002',
+        scopeName: 'Munzalan Cabang Sambas',
+        validPasswords: ['sambas123', 'sambas', '123456']
+      }
+    };
+
+    if (MASTER_ACCOUNTS[cleanU]) {
+      const acc = MASTER_ACCOUNTS[cleanU];
+      if (acc.validPasswords.includes(cleanP) || acc.validPasswords.includes(password)) {
+        const session = {
+          userId: acc.userId,
+          username: acc.username,
+          displayName: acc.displayName,
+          role: acc.role,
+          scopeId: acc.scopeId,
+          scopeName: acc.scopeName,
+          loginAt: new Date().toISOString()
+        };
+        localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+        return { success: true, user: session };
+      }
     }
 
+    // Check Custom Users from Storage
+    const users = this.getUsers();
     const user = users.find(u => {
       const uName = String(u.username || '').toLowerCase().trim();
       if (uName !== cleanU) return false;
-      // Exact password match
-      if (u.password === password) return true;
-      // Friendly fallback for admin (admin / admin123)
-      if (cleanU === 'admin' && (password === 'admin123' || password === 'admin')) return true;
-      if (cleanU === 'riayah' && (password === 'riayah123' || password === 'riayah')) return true;
-      return false;
+      const uPass = String(u.password || '').trim();
+      return uPass === cleanP || u.password === password;
     });
 
     if (user) {
       const session = {
-        userId: user.id || 'USR-ADMIN',
+        userId: user.id || `USR-${Date.now()}`,
         username: user.username,
         displayName: user.displayName || user.username,
-        role: user.role || 'admin',
+        role: user.role || 'divisi',
         scopeId: user.scopeId || null,
-        scopeName: user.scopeName || 'Semua Data (Full Access)',
+        scopeName: user.scopeName || (user.role === 'admin' ? 'Semua Data' : user.displayName),
         loginAt: new Date().toISOString()
       };
       localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
       return { success: true, user: session };
     }
-    return { success: false, message: 'Username atau password salah. Periksa kembali dan coba lagi.' };
+
+    return { success: false, message: 'Username atau password salah. Coba: admin / admin123' };
   },
 
   logout() {
